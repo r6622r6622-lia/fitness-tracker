@@ -301,7 +301,11 @@
     function updateThemeIcon() {
         const btn = $('#btnThemeToggle');
         if (!btn) return;
-        btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const icon = btn.querySelector('.btn-nav-icon');
+        const label = btn.querySelector('.btn-nav-label');
+        if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+        if (label) label.textContent = isDark ? '淺色' : '深色';
     }
 
     /* ================================

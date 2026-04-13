@@ -39,9 +39,11 @@ body{font-family:'Inter','Noto Sans TC',-apple-system,sans-serif;background:var(
 .nav-links{display:flex;gap:4px}
 .nav-link{padding:8px 14px;border-radius:var(--radius-sm);color:var(--text-dim);text-decoration:none;font-size:.85rem;font-weight:500;transition:var(--transition)}
 .nav-link:hover,.nav-link.active{color:var(--text);background:var(--primary-bg)}.nav-link.active{color:var(--primary)}
-.nav-actions{display:flex;align-items:center;gap:6px}
-.btn-theme-toggle{background:none;border:none;cursor:pointer;font-size:1.1rem;opacity:.6;transition:var(--transition);padding:4px}.btn-theme-toggle:hover{opacity:1}
-.btn-clear-all{background:none;border:none;cursor:pointer;font-size:1.1rem;opacity:.4;transition:var(--transition)}.btn-clear-all:hover{opacity:1}
+.nav-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.btn-nav-action{display:flex;align-items:center;gap:4px;background:var(--bg-main);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:.78rem;font-weight:500;color:var(--text-dim);cursor:pointer;transition:var(--transition);font-family:inherit;white-space:nowrap}
+.btn-nav-action:hover{color:var(--text);border-color:var(--primary);background:var(--primary-bg)}
+.btn-nav-action.btn-nav-danger:hover{border-color:var(--danger);color:var(--danger);background:rgba(239,68,68,.06)}
+.btn-nav-icon{font-size:.9rem;line-height:1}.btn-nav-label{font-size:.78rem}
 
 /* SECTIONS */
 .section{padding:50px 2rem 40px;max-width:1100px;margin:0 auto}
@@ -292,6 +294,7 @@ select.input{appearance:none;cursor:pointer;background-image:url("data:image/svg
     .food-quick-tags{grid-template-columns:1fr}
     .hero-stats{flex-direction:column;align-items:center}.weekly-hero{flex-direction:column}
     .nav-links{gap:0}.nav-link{padding:8px 8px;font-size:.78rem}.insights-grid{grid-template-columns:1fr}
+    .nav-actions{gap:4px}.btn-nav-label{display:none}.btn-nav-action{padding:5px 8px}.btn-auth{padding:5px 10px;font-size:.72rem}
     .upload-row{flex-direction:column}.tdee-result-grid{grid-template-columns:1fr}
     .weekly-goals-display{grid-template-columns:1fr}
 }
