@@ -163,6 +163,7 @@
 
     /* ---------- INIT ---------- */
     document.addEventListener('DOMContentLoaded', () => {
+        initThemeToggle();
         initDateBanner();
         initNav();
         initTabs();
@@ -178,6 +179,33 @@
         initClearAll();
         refreshAll();
     });
+
+    /* ================================
+       THEME TOGGLE
+       ================================ */
+    function initThemeToggle() {
+        const saved = localStorage.getItem('fp_theme');
+        if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        updateThemeIcon();
+
+        $('#btnThemeToggle').addEventListener('click', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('fp_theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('fp_theme', 'dark');
+            }
+            updateThemeIcon();
+        });
+    }
+
+    function updateThemeIcon() {
+        const btn = $('#btnThemeToggle');
+        if (!btn) return;
+        btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+    }
 
     /* ================================
        DATE BANNER
