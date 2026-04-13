@@ -276,6 +276,14 @@ select.input{appearance:none;cursor:pointer;background-image:url("data:image/svg
 @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .footer{text-align:center;padding:40px 2rem;color:var(--text-muted);font-size:.8rem;border-top:1px solid var(--border-light);margin-top:40px}
 
+/* AUTH BUTTON */
+.btn-auth{background:var(--primary-bg);color:var(--primary);border:1px solid rgba(79,70,229,.2);border-radius:20px;padding:5px 14px;font-size:.8rem;font-weight:600;cursor:pointer;transition:var(--transition);font-family:inherit;white-space:nowrap}
+.btn-auth:hover{background:var(--primary);color:#fff}
+.btn-auth.logged-in{background:rgba(16,185,129,.08);color:var(--success);border-color:rgba(16,185,129,.2)}
+.btn-auth.logged-in:hover{background:rgba(16,185,129,.15)}
+.sync-indicator{position:fixed;top:28px;right:0;z-index:102;padding:2px 12px;font-size:.72rem;font-weight:600;color:#fff;background:var(--success);border-radius:0 0 0 8px;opacity:0;transition:opacity .3s}
+.sync-indicator.show{opacity:1}
+
 /* RESPONSIVE */
 @media(max-width:768px){
     .section{padding:40px 1rem 20px}.section-top{padding-top:100px}

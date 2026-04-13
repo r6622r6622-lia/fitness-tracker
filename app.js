@@ -15,7 +15,52 @@
         statsDisplay: 'fp_stats_display'
     };
     const load = k => JSON.parse(localStorage.getItem(k) || 'null');
-    const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+    const save = (k, v) => {
+        localStorage.setItem(k, JSON.stringify(v));
+        syncToCloud();
+    };
+
+    /* ---------- FIREBASE SYNC ---------- */
+    let _currentUser = null;
+    let _syncTimer = null;
+
+    function syncToCloud() {
+        if (!_currentUser || !window.__firebase) return;
+        clearTimeout(_syncTimer);
+        _syncTimer = setTimeout(async () => {
+            try {
+                const { fbDb, doc, setDoc } = window.__firebase;
+                const data = {};
+                Object.entries(KEYS).forEach(([, k]) => {
+                    const v = localStorage.getItem(k);
+                    if (v) data[k] = v;
+                });
+                const indicator = document.getElementById('syncIndicator');
+                if (indicator) { indicator.textContent = '☁️ 同步中...'; indicator.classList.add('show'); }
+                await setDoc(doc(fbDb, 'users', _currentUser.uid), { data, updatedAt: Date.now() }, { merge: true });
+                if (indicator) { indicator.textContent = '✅ 已同步'; setTimeout(() => indicator.classList.remove('show'), 1500); }
+            } catch (e) {
+                console.error('Sync to cloud failed:', e);
+            }
+        }, 1000);
+    }
+
+    async function syncFromCloud() {
+        if (!_currentUser || !window.__firebase) return;
+        try {
+            const { fbDb, doc, getDoc } = window.__firebase;
+            const snap = await getDoc(doc(fbDb, 'users', _currentUser.uid));
+            if (snap.exists()) {
+                const stored = snap.data().data || {};
+                Object.entries(stored).forEach(([k, v]) => {
+                    localStorage.setItem(k, v);
+                });
+                refreshAll();
+            }
+        } catch (e) {
+            console.error('Sync from cloud failed:', e);
+        }
+    }
 
     /* ---------- EQUIPMENT → EXERCISES ---------- */
     const EQUIPMENT_EXERCISES = {
@@ -164,6 +209,7 @@
     /* ---------- INIT ---------- */
     document.addEventListener('DOMContentLoaded', () => {
         initThemeToggle();
+        initAuth();
         initDateBanner();
         initNav();
         initTabs();
@@ -179,6 +225,57 @@
         initClearAll();
         refreshAll();
     });
+
+    /* ================================
+       AUTH (Firebase Google Login)
+       ================================ */
+    function initAuth() {
+        const btn = $('#btnAuth');
+        if (!btn) return;
+
+        // Wait for Firebase module to load
+        const waitForFirebase = setInterval(() => {
+            if (!window.__firebase) return;
+            clearInterval(waitForFirebase);
+
+            const { fbAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } = window.__firebase;
+
+            onAuthStateChanged(fbAuth, async (user) => {
+                _currentUser = user;
+                if (user) {
+                    const name = user.displayName || user.email || '已登入';
+                    btn.textContent = `👤 ${name.length > 6 ? name.slice(0, 6) + '…' : name}`;
+                    btn.classList.add('logged-in');
+                    btn.title = `${user.email}\n點擊登出`;
+                    await syncFromCloud();
+                    toast(`歡迎回來，${user.displayName || ''}！已同步雲端資料`, 'info');
+                } else {
+                    btn.textContent = '🔑 登入';
+                    btn.classList.remove('logged-in');
+                    btn.title = '登入以同步資料';
+                }
+            });
+
+            btn.addEventListener('click', async () => {
+                if (_currentUser) {
+                    if (confirm('確定要登出嗎？登出後資料仍保留在此裝置，但不再同步。')) {
+                        await signOut(fbAuth);
+                        _currentUser = null;
+                        toast('已登出', 'info');
+                    }
+                } else {
+                    try {
+                        const provider = new GoogleAuthProvider();
+                        await signInWithPopup(fbAuth, provider);
+                    } catch (e) {
+                        if (e.code !== 'auth/popup-closed-by-user') {
+                            toast('登入失敗：' + e.message, 'error');
+                        }
+                    }
+                }
+            });
+        }, 100);
+    }
 
     /* ================================
        THEME TOGGLE
@@ -1243,9 +1340,16 @@
 
     /* ---------- Clear All ---------- */
     function initClearAll() {
-        $('#btnClearAll').addEventListener('click', () => {
+        $('#btnClearAll').addEventListener('click', async () => {
             if (!confirm('確定要清除所有紀錄嗎？此操作無法回復。')) return;
             Object.values(KEYS).forEach(k => localStorage.removeItem(k));
+            // Also clear cloud data if logged in
+            if (_currentUser && window.__firebase) {
+                try {
+                    const { fbDb, doc, setDoc } = window.__firebase;
+                    await setDoc(doc(fbDb, 'users', _currentUser.uid), { data: {}, updatedAt: Date.now() });
+                } catch (e) { console.error('Cloud clear failed:', e); }
+            }
             toast('所有紀錄已清除', 'info');
             setTimeout(() => location.reload(), 500);
         });
