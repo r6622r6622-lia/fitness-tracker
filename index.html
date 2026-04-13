@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitPulse — 智能健身追蹤</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- ========== DATE BANNER ========== -->
+    <div class="date-banner" id="dateBanner"></div>
+
+    <!-- ========== NAV ========== -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-brand">
+            <span class="brand-icon">⚡</span>
+            <span class="brand-text">FitPulse</span>
+        </div>
+        <div class="nav-links">
+            <a href="#weeklyOverviewSection" class="nav-link active">📅 總覽</a>
+            <a href="#training" class="nav-link">🏋️ 訓練</a>
+            <a href="#diet" class="nav-link">🍱 飲食</a>
+            <a href="#history" class="nav-link">📈 歷史</a>
+            <a href="#insights" class="nav-link">📊 建議</a>
+        </div>
+        <button class="btn-clear-all" id="btnClearAll" title="清除所有紀錄">🗑️</button>
+    </nav>
+
+    <!-- ========== WEEKLY OVERVIEW (TOP) ========== -->
+    <section class="section section-top" id="weeklyOverviewSection">
+        <div class="weekly-hero">
+            <div class="weekly-hero-left">
+                <h2 class="section-title">📅 本週總覽</h2>
+                <div class="motivational-quote" id="motivationalQuote">
+                    <span class="quote-icon">💪</span>
+                    <span class="quote-text" id="quoteText">每一次訓練，都是對未來最好的投資。</span>
+                </div>
+            </div>
+            <div class="hero-stats" id="heroStats">
+                <div class="stat-pill">
+                    <span class="stat-icon">🔥</span>
+                    <span class="stat-value" id="statStreak">0</span>
+                    <span class="stat-label">天連續</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="stat-icon">💪</span>
+                    <span class="stat-value" id="statSessions">0</span>
+                    <span class="stat-label">總訓練次</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="stat-icon">🍽️</span>
+                    <span class="stat-value" id="statMeals">0</span>
+                    <span class="stat-label">飲食紀錄</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Goals -->
+        <div class="card weekly-goals-card">
+            <div class="weekly-goals-header">
+                <h3 class="card-title">🎯 本週目標</h3>
+                <button class="btn btn-secondary btn-sm" id="btnEditWeekGoals">✏️ 編輯</button>
+            </div>
+            <!-- Total Progress Bar with Runner -->
+            <div class="progress-runner-wrap" id="progressRunnerWrap">
+                <div class="progress-runner-track">
+                    <div class="progress-runner-fill" id="progressRunnerFill"></div>
+                    <div class="progress-runner-char" id="progressRunnerChar">🏃</div>
+                </div>
+                <div class="progress-runner-label"><span id="progressRunnerPct">0</span>% 本週完成</div>
+            </div>
+
+            <div class="weekly-goals-display" id="weekGoalsDisplay">
+                <div class="wg-item"><span class="wg-icon">🏋️</span><span class="wg-text" id="wgTrainText">訓練 4 天</span><span class="wg-status" id="wgTrainStatus">0/4</span></div>
+                <div class="wg-item"><span class="wg-icon">🏃</span><span class="wg-text" id="wgCardioText">有氧 150 分鐘</span><span class="wg-status" id="wgCardioStatus">0/150</span></div>
+                <div class="wg-item"><span class="wg-icon">🍽️</span><span class="wg-text" id="wgMealText">每日記錄飲食</span><span class="wg-status" id="wgMealStatus">0/7</span></div>
+                <div class="wg-item"><span class="wg-icon">⭐</span><span class="wg-text" id="wgCustomText">自訂目標</span><span class="wg-status" id="wgCustomStatus">—</span></div>
+            </div>
+            <!-- Edit Form (hidden by default) -->
+            <div class="weekly-goals-form" id="weekGoalsForm" style="display:none">
+                <div class="form-row quad">
+                    <div class="form-group">
+                        <label>訓練天數</label>
+                        <input type="number" id="wgTrainDays" class="input" min="0" max="7" value="4">
+                    </div>
+                    <div class="form-group">
+                        <label>有氧分鐘</label>
+                        <input type="number" id="wgCardioMin" class="input" min="0" value="150">
+                    </div>
+                    <div class="form-group">
+                        <label>飲食記錄天</label>
+                        <input type="number" id="wgMealDays" class="input" min="0" max="7" value="7">
+                    </div>
+                    <div class="form-group">
+                        <label>自訂目標</label>
+                        <input type="text" id="wgCustomGoal" class="input" placeholder="例：每天喝水2000ml">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>本週激勵語</label>
+                        <input type="text" id="wgMotivation" class="input" placeholder="輸入一句激勵自己的話">
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-sm" id="btnSaveWeekGoals">💾 儲存</button>
+            </div>
+        </div>
+
+        <!-- Day dots + Stats -->
+        <div class="card">
+            <div class="day-dot-row" id="dayDotRow"></div>
+            <h4 style="font-size:.95rem;margin-bottom:12px;color:var(--text)">📊 本週數據 <button class="btn btn-secondary btn-sm" id="btnEditStats" style="margin-left:8px;font-size:.75rem;padding:4px 10px">⚙️ 自訂顯示</button></h4>
+            <div class="weekly-stats-grid" id="weeklyStatsGrid"></div>
+            <!-- Stats customization (hidden) -->
+            <div class="stats-custom-form" id="statsCustomForm" style="display:none">
+                <p class="form-hint">選擇要顯示的統計項目：</p>
+                <div class="stats-checkbox-group" id="statsCheckboxGroup"></div>
+                <button class="btn btn-primary btn-sm" id="btnSaveStats" style="margin-top:10px">💾 儲存</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== SECTION: TRAINING ========== -->
+    <section class="section" id="training">
+        <div class="section-header">
+            <h2 class="section-title">🏋️ 運動訓練量計算機</h2>
+            <p class="section-desc">記錄阻力訓練與有氧訓練，追蹤漸進式超負荷</p>
+        </div>
+
+        <div class="tab-container">
+            <button class="tab-btn active" data-tab="resistance">💪 阻力訓練</button>
+            <button class="tab-btn" data-tab="cardio">🏃 有氧訓練</button>
+        </div>
+
+        <!-- Resistance Training Tab -->
+        <div class="tab-panel active" id="tab-resistance">
+            <div class="card">
+                <h3 class="card-title">新增阻力訓練</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>訓練日期</label>
+                        <input type="date" id="resistDate" class="input">
+                    </div>
+                    <div class="form-group">
+                        <label>肌群</label>
+                        <select id="muscleGroup" class="input">
+                            <option value="胸">胸</option>
+                            <option value="背">背</option>
+                            <option value="腿">腿</option>
+                            <option value="肩">肩</option>
+                            <option value="手臂">手臂</option>
+                            <option value="核心">核心</option>
+                            <option value="全身">全身</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>器材</label>
+                        <select id="equipmentType" class="input">
+                            <option value="">— 選擇器材 —</option>
+                            <option value="啞鈴">🔩 啞鈴</option>
+                            <option value="槓鈴">🏋️ 槓鈴</option>
+                            <option value="大型機械">⚙️ 大型機械</option>
+                            <option value="纜繩機">🔗 纜繩機 (Cable)</option>
+                            <option value="Smith機">📐 Smith 機</option>
+                            <option value="壺鈴">🫗 壺鈴</option>
+                            <option value="彈力帶">〰️ 彈力帶</option>
+                            <option value="自身體重">🤸 自身體重</option>
+                            <option value="其他">📋 其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>動作名稱</label>
+                        <input type="text" id="exerciseName" class="input" list="exerciseList" placeholder="選擇或輸入動作">
+                        <datalist id="exerciseList"></datalist>
+                    </div>
+                </div>
+                <div class="form-row triple">
+                    <div class="form-group">
+                        <label>組數</label>
+                        <input type="number" id="sets" class="input" min="1" value="3">
+                    </div>
+                    <div class="form-group">
+                        <label>次數/組</label>
+                        <input type="number" id="reps" class="input" min="1" value="10">
+                    </div>
+                    <div class="form-group">
+                        <label>重量 (kg)</label>
+                        <input type="number" id="weight" class="input" min="0" step="0.5" value="20">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>RPE（自覺努力程度 1-10）</label>
+                        <input type="range" id="rpe" class="range-input" min="1" max="10" value="7">
+                        <div class="range-labels">
+                            <span>1 輕鬆</span>
+                            <span id="rpeValue">7</span>
+                            <span>10 極限</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="currentExercises" class="exercise-list"></div>
+                <div class="btn-row">
+                    <button class="btn btn-secondary" id="btnAddExercise">＋ 加入動作</button>
+                    <button class="btn btn-primary" id="btnSaveResist">💾 儲存本次訓練</button>
+                </div>
+            </div>
+            <div class="card" id="volumeGaugeCard" style="display:none">
+                <h3 class="card-title">📊 本次訓練分析</h3>
+                <div class="gauge-container">
+                    <div class="gauge-ring">
+                        <svg viewBox="0 0 120 120" class="gauge-svg">
+                            <circle cx="60" cy="60" r="52" class="gauge-bg"/>
+                            <circle cx="60" cy="60" r="52" class="gauge-fill" id="gaugeFill"/>
+                        </svg>
+                        <div class="gauge-center">
+                            <span class="gauge-value" id="gaugeValue">0%</span>
+                            <span class="gauge-label">訓練刺激</span>
+                        </div>
+                    </div>
+                    <div class="gauge-info">
+                        <div class="info-item"><span class="info-label">本次總訓練量</span><span class="info-value" id="infoVolume">0 kg</span></div>
+                        <div class="info-item"><span class="info-label">過去平均訓練量</span><span class="info-value" id="infoAvgVolume">0 kg</span></div>
+                        <div class="info-item"><span class="info-label">平均 RPE</span><span class="info-value" id="infoAvgRpe">-</span></div>
+                        <div class="info-item"><span class="info-label">刺激評估</span><span class="info-value badge" id="infoStimulus">-</span></div>
+                    </div>
+                </div>
+                <div class="rest-box" id="restBox">
+                    <h4>🛌 休息建議</h4>
+                    <p id="restAdvice"></p>
+                    <div class="rest-strategy" id="restStrategy"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cardio Tab -->
+        <div class="tab-panel" id="tab-cardio">
+            <div class="card">
+                <h3 class="card-title">新增有氧訓練</h3>
+                <div class="form-row">
+                    <div class="form-group"><label>訓練日期</label><input type="date" id="cardioDate" class="input"></div>
+                    <div class="form-group">
+                        <label>有氧類型</label>
+                        <select id="cardioType" class="input">
+                            <option value="跑步">🏃 跑步</option><option value="騎車">🚴 騎車</option><option value="游泳">🏊 游泳</option>
+                            <option value="跳繩">⏭️ 跳繩</option><option value="飛輪">🔄 飛輪</option><option value="划船機">🚣 划船機</option>
+                            <option value="橢圓機">🔵 橢圓機</option><option value="快走">🚶 快走</option><option value="其他">📋 其他</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row triple">
+                    <div class="form-group"><label>時長（分鐘）</label><input type="number" id="cardioDuration" class="input" min="1" value="30"></div>
+                    <div class="form-group"><label>平均心率 (bpm)</label><input type="number" id="cardioHR" class="input" min="60" max="220" value="140"></div>
+                    <div class="form-group"><label>距離（km，可留空）</label><input type="number" id="cardioDistance" class="input" min="0" step="0.1"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>強度感受</label>
+                        <div class="intensity-selector">
+                            <button class="intensity-btn" data-val="低強度">🟢 低強度</button>
+                            <button class="intensity-btn active" data-val="中強度">🟡 中強度</button>
+                            <button class="intensity-btn" data-val="高強度">🔴 高強度</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="btn-row"><button class="btn btn-primary" id="btnSaveCardio">💾 儲存有氧紀錄</button></div>
+            </div>
+            <div class="card" id="cardioSummaryCard" style="display:none">
+                <h3 class="card-title">🏃 有氧訓練分析</h3>
+                <div class="cardio-stats-grid">
+                    <div class="cardio-stat"><span class="cs-value" id="csCalories">0</span><span class="cs-label">預估消耗 (kcal)</span></div>
+                    <div class="cardio-stat"><span class="cs-value" id="csZone">-</span><span class="cs-label">心率區間</span></div>
+                    <div class="cardio-stat"><span class="cs-value" id="csWeekly">0</span><span class="cs-label">本週有氧 (分鐘)</span></div>
+                    <div class="cardio-stat"><span class="cs-value" id="csTarget">🎯</span><span class="cs-label">WHO建議達成</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== SECTION: DIET ========== -->
+    <section class="section" id="diet">
+        <div class="section-header">
+            <h2 class="section-title">🍱 飲食計算機</h2>
+            <p class="section-desc">選擇食物分類快速記錄，追蹤每日攝取量</p>
+        </div>
+        <div class="diet-grid">
+            <div class="card">
+                <h3 class="card-title">📸 新增飲食紀錄</h3>
+                <div class="form-row">
+                    <div class="form-group"><label>日期</label><input type="date" id="dietDate" class="input"></div>
+                    <div class="form-group">
+                        <label>餐別</label>
+                        <select id="mealType" class="input">
+                            <option value="早餐">🌅 早餐</option><option value="午餐">☀️ 午餐</option>
+                            <option value="晚餐">🌙 晚餐</option><option value="點心">🍪 點心/宵夜</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Photo Upload -->
+                <div class="upload-row">
+                    <div class="upload-zone upload-half" id="uploadZone">
+                        <input type="file" id="photoInput" accept="image/*" hidden>
+                        <div class="upload-placeholder" id="uploadPlaceholder">
+                            <span class="upload-icon">📷</span>
+                            <span>餐點照片</span>
+                            <span class="upload-hint">點擊上傳</span>
+                        </div>
+                        <img id="photoPreview" class="photo-preview" style="display:none">
+                    </div>
+                    <div class="upload-zone upload-half" id="nutritionUploadZone">
+                        <input type="file" id="nutritionPhotoInput" accept="image/*" hidden>
+                        <div class="upload-placeholder" id="nutritionPlaceholder">
+                            <span class="upload-icon">🏷️</span>
+                            <span>成分表照片</span>
+                            <span class="upload-hint">超商食品標示</span>
+                        </div>
+                        <img id="nutritionPreview" class="photo-preview" style="display:none">
+                    </div>
+                </div>
+
+                <!-- Food Items with Categories -->
+                <div class="food-entry">
+                    <h4>🍴 食物項目</h4>
+                    <p class="form-hint">選擇分類，快速加入常見食物：</p>
+                    <div class="food-category-tabs" id="foodCategoryTabs">
+                        <button class="food-cat-btn active" data-cat="all">📋 選擇分類</button>
+                        <button class="food-cat-btn" data-cat="rice">🍚 飯類</button>
+                        <button class="food-cat-btn" data-cat="noodle">🍜 麵類</button>
+                        <button class="food-cat-btn" data-cat="chicken">🐔 雞肉</button>
+                        <button class="food-cat-btn" data-cat="fish">🐟 魚/海鮮</button>
+                        <button class="food-cat-btn" data-cat="beef_pork">🥩 牛/豬肉</button>
+                        <button class="food-cat-btn" data-cat="leafy">🥬 葉菜類</button>
+                        <button class="food-cat-btn" data-cat="root">🥕 根莖類</button>
+                        <button class="food-cat-btn" data-cat="fruit">🍎 水果</button>
+                        <button class="food-cat-btn" data-cat="canned">🥫 罐頭/零食</button>
+                        <button class="food-cat-btn" data-cat="drink">🥛 飲品/其他</button>
+                    </div>
+                    <div class="food-quick-tags" id="foodQuickTags"></div>
+                    <div class="food-serving-detail" id="foodServingDetail" style="display:none"></div>
+                    <div class="manual-food-form">
+                        <p class="form-hint">或手動輸入：</p>
+                        <div class="form-row">
+                            <div class="form-group"><label>品名</label><input type="text" id="foodName" class="input" placeholder="食物名稱"></div>
+                        </div>
+                        <div class="form-row quad">
+                            <div class="form-group"><label>熱量 kcal</label><input type="number" id="foodCal" class="input" min="0"></div>
+                            <div class="form-group"><label>蛋白質 g</label><input type="number" id="foodProtein" class="input" min="0" step="0.1"></div>
+                            <div class="form-group"><label>碳水 g</label><input type="number" id="foodCarb" class="input" min="0" step="0.1"></div>
+                            <div class="form-group"><label>脂肪 g</label><input type="number" id="foodFat" class="input" min="0" step="0.1"></div>
+                        </div>
+                        <button class="btn btn-secondary" id="btnAddFood">＋ 加入食物</button>
+                    </div>
+                </div>
+                <div id="currentFoods" class="food-list"></div>
+                <div class="btn-row"><button class="btn btn-primary" id="btnSaveMeal">💾 儲存本餐紀錄</button></div>
+            </div>
+
+            <!-- Daily Diet Dashboard -->
+            <div class="card">
+                <h3 class="card-title">📊 今日攝取總覽</h3>
+                <div class="daily-macros" id="dailyMacros">
+                    <div class="macro-ring-container">
+                        <div class="macro-ring" id="calRing">
+                            <svg viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="42" class="ring-bg"/>
+                                <circle cx="50" cy="50" r="42" class="ring-fill cal-fill" id="calFill"/>
+                            </svg>
+                            <div class="ring-center">
+                                <span class="ring-value" id="calValue">0</span>
+                                <span class="ring-unit">kcal</span>
+                            </div>
+                        </div>
+                        <span class="macro-label">熱量</span>
+                        <span class="macro-target" id="calTarget">目標: -- kcal</span>
+                    </div>
+                    <div class="macro-bars">
+                        <div class="macro-bar-item">
+                            <div class="mb-header">
+                                <span class="mb-name protein-color"><span class="macro-icon">💪</span> 蛋白質 <span class="macro-func">建構肌肉</span></span>
+                                <span class="mb-value" id="pValue">0g / --g</span>
+                            </div>
+                            <div class="mb-track"><div class="mb-fill protein-fill" id="pFill"></div></div>
+                        </div>
+                        <div class="macro-bar-item">
+                            <div class="mb-header">
+                                <span class="mb-name carb-color"><span class="macro-icon">⚡</span> 碳水化合物 <span class="macro-func">供應能量</span></span>
+                                <span class="mb-value" id="cValue">0g / --g</span>
+                            </div>
+                            <div class="mb-track"><div class="mb-fill carb-fill" id="cFill"></div></div>
+                        </div>
+                        <div class="macro-bar-item">
+                            <div class="mb-header">
+                                <span class="mb-name fat-color"><span class="macro-icon">🛡️</span> 脂肪 <span class="macro-func">保護臟器</span></span>
+                                <span class="mb-value" id="fValue">0g / --g</span>
+                            </div>
+                            <div class="mb-track"><div class="mb-fill fat-fill" id="fFill"></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="goal-recommend" id="goalRecommend">
+                    <button class="tdee-toggle-btn" id="btnToggleTDEE">💡 每日目標建議計算 <span class="tdee-toggle-arrow">▼</span></button>
+                    <div class="tdee-collapsible" id="tdeeCollapsible" style="display:none">
+                    <p class="form-hint">輸入個人資料，推算建議攝取量（Mifflin-St Jeor 公式）。</p>
+                    <div class="form-row quad">
+                        <div class="form-group"><label>性別</label><select id="tdeeGender" class="input"><option value="male">男</option><option value="female">女</option></select></div>
+                        <div class="form-group"><label>年齡</label><input type="number" id="tdeeAge" class="input" min="10" max="100" value="25"></div>
+                        <div class="form-group"><label>身高 cm</label><input type="number" id="tdeeHeight" class="input" min="100" max="250" value="170"></div>
+                        <div class="form-group"><label>體重 kg</label><input type="number" id="tdeeWeight" class="input" min="30" max="200" value="70"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>日常活動程度</label><select id="tdeeActivity" class="input"><option value="1.2">久坐</option><option value="1.375" selected>輕度活動</option><option value="1.55">中度活動</option><option value="1.725">高度活動</option><option value="1.9">超高活動</option></select></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>體重目標</label><select id="tdeeGoal" class="input"><option value="lose_fast">積極減脂(-0.75kg/週)</option><option value="lose" selected>穩定減脂(-0.5kg/週)</option><option value="lose_slow">緩慢減脂(-0.25kg/週)</option><option value="maintain">維持體重</option><option value="gain_slow">緩慢增肌(+0.25kg/週)</option><option value="gain">穩定增肌(+0.5kg/週)</option></select></div>
+                    </div>
+                    <button class="btn btn-primary btn-sm" id="btnCalcTDEE">🔬 計算建議值</button>
+                    <div class="tdee-result" id="tdeeResult" style="display:none">
+                        <div class="tdee-result-grid">
+                            <div class="tdee-item"><span class="tdee-val" id="tdeeBMR">-</span><span class="tdee-label">BMR</span></div>
+                            <div class="tdee-item"><span class="tdee-val" id="tdeeTDEE">-</span><span class="tdee-label">TDEE</span></div>
+                            <div class="tdee-item highlight"><span class="tdee-val" id="tdeeTarget">-</span><span class="tdee-label">建議攝取</span></div>
+                        </div>
+                        <div class="tdee-macros"><span>🥩 蛋白質 <strong id="tdeeP">-</strong>g</span><span>🍞 碳水 <strong id="tdeeC">-</strong>g</span><span>🧈 脂肪 <strong id="tdeeF">-</strong>g</span></div>
+                        <button class="btn btn-secondary btn-sm" id="btnApplyTDEE">✅ 套用為每日目標</button>
+                    </div>
+                    </div>
+                </div>
+                <div class="goal-settings">
+                    <h4>🎯 每日目標設定</h4>
+                    <div class="form-row quad">
+                        <div class="form-group"><label>熱量 kcal</label><input type="number" id="goalCal" class="input" value="2200"></div>
+                        <div class="form-group"><label>蛋白質 g</label><input type="number" id="goalP" class="input" value="150"></div>
+                        <div class="form-group"><label>碳水 g</label><input type="number" id="goalC" class="input" value="250"></div>
+                        <div class="form-group"><label>脂肪 g</label><input type="number" id="goalF" class="input" value="60"></div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" id="btnSaveGoals">儲存目標</button>
+                </div>
+                <div class="today-meals" id="todayMeals"><h4>📋 今日飲食紀錄</h4><div id="todayMealList" class="meal-log"></div></div>
+                <div class="diet-verdict" id="dietVerdict" style="display:none"><h4>📝 飲食評估</h4><p id="dietVerdictText"></p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== SECTION: HISTORY (combined) ========== -->
+    <section class="section" id="history">
+        <div class="section-header">
+            <h2 class="section-title">📈 歷史紀錄</h2>
+            <p class="section-desc">運動、飲食與恢復的完整追蹤</p>
+        </div>
+
+        <div class="tab-container" id="historyTabContainer">
+            <button class="tab-btn active" data-htab="h-training">💪 運動紀錄</button>
+            <button class="tab-btn" data-htab="h-1rm">🏆 1RM 追蹤</button>
+            <button class="tab-btn" data-htab="h-diet">🍱 飲食紀錄</button>
+            <button class="tab-btn" data-htab="h-fatigue">😴 疲勞管理</button>
+        </div>
+
+        <!-- Training History -->
+        <div class="htab-panel active" id="h-training">
+            <div class="card">
+                <h3 class="card-title">運動訓練歷史</h3>
+                <div class="history-filter">
+                    <button class="filter-btn active" data-range="7">近 7 天</button>
+                    <button class="filter-btn" data-range="30">近 30 天</button>
+                    <button class="filter-btn" data-range="all">全部</button>
+                </div>
+                <div class="chart-area" id="volumeChart"></div>
+                <div class="history-list" id="historyList"><p class="empty-msg">尚無訓練紀錄</p></div>
+            </div>
+        </div>
+
+        <!-- 1RM Tracking -->
+        <div class="htab-panel" id="h-1rm">
+            <div class="card">
+                <h3 class="card-title">🏆 主要動作預估 1RM（最大可負荷重量）</h3>
+                <p class="form-hint">根據你的歷史紀錄，使用 Epley 公式 (1RM = w × (1 + r/30)) 推算各動作預估最大重量。</p>
+                <div id="oneRmList" class="onerm-list"><p class="empty-msg">尚無資料，開始記錄訓練後即可追蹤 1RM</p></div>
+            </div>
+        </div>
+
+        <!-- Diet History -->
+        <div class="htab-panel" id="h-diet">
+            <div class="card">
+                <h3 class="card-title">飲食紀錄歷史</h3>
+                <div class="history-filter" id="dietHistoryFilter">
+                    <button class="filter-btn active" data-drange="7">近 7 天</button>
+                    <button class="filter-btn" data-drange="30">近 30 天</button>
+                    <button class="filter-btn" data-drange="all">全部</button>
+                </div>
+                <div class="history-list" id="dietHistoryList"><p class="empty-msg">尚無飲食紀錄</p></div>
+            </div>
+        </div>
+
+        <!-- Fatigue Management -->
+        <div class="htab-panel" id="h-fatigue">
+            <div class="card">
+                <h3 class="card-title">😴 疲勞監控</h3>
+                <div class="fatigue-meter">
+                    <div class="fm-bar-track"><div class="fm-bar-fill" id="fatigueFill"></div></div>
+                    <div class="fm-labels"><span>精力充沛</span><span>需要休息</span></div>
+                </div>
+                <p class="insight-text" id="fatigueText">載入中...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== SECTION: INSIGHTS ========== -->
+    <section class="section" id="insights">
+        <div class="section-header">
+            <h2 class="section-title">📊 整體建議</h2>
+            <p class="section-desc">根據你的訓練與飲食紀錄，給予個人化的健康建議</p>
+        </div>
+        <div class="insights-grid">
+            <div class="card insight-card"><div class="insight-icon">🏋️</div><h3>運動建議</h3><ul class="insight-list" id="trainingInsights"><li>載入中...</li></ul></div>
+            <div class="card insight-card"><div class="insight-icon">🥗</div><h3>飲食建議</h3><ul class="insight-list" id="dietInsights"><li>載入中...</li></ul></div>
+            <div class="card insight-card wide"><div class="insight-icon">💡</div><h3>生活與恢復策略</h3><div class="lifestyle-tips" id="lifestyleTips"><p>載入中...</p></div></div>
+        </div>
+    </section>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <footer class="footer"><p>FitPulse &copy; 2026 — 數據僅供參考，實際訓練請依個人狀況調整</p></footer>
+    <script src="app.js"></script>
+</body>
+</html>
