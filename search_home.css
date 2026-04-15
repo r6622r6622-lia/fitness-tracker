@@ -227,3 +227,21 @@ select.input{appearance:none;cursor:pointer;background-image:url("data:image/svg
 @media(max-width:480px){
     .mortgage-result{grid-template-columns:1fr}
 }
+
+/* Address Analysis */
+.addr-comparable-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-top:14px}
+.addr-stat{background:var(--bg-alt);border-radius:var(--radius-sm);padding:14px;text-align:center}
+.addr-stat .stat-val{display:block;font-size:1.3rem;font-weight:700;color:var(--accent);margin-bottom:4px}
+.addr-stat .stat-label{font-size:.78rem;color:var(--text-dim)}
+.addr-tag-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.addr-tag{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;font-size:.82rem;font-weight:500}
+.addr-tag svg{width:14px;height:14px;fill:currentColor}
+.tag-danger{background:rgba(220,38,38,.1);color:#dc2626;border:1px solid rgba(220,38,38,.2)}
+.tag-warning{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}
+.tag-safe{background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.2)}
+.tag-info{background:rgba(37,99,235,.08);color:var(--accent);border:1px solid rgba(37,99,235,.15)}
+.nimby-item,.special-item{display:flex;align-items:flex-start;gap:10px;padding:12px;border-radius:var(--radius-sm);margin-bottom:8px;background:var(--bg-alt)}
+.nimby-item .nimby-icon,.special-item .special-icon{flex-shrink:0;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px}
+.nimby-item .nimby-body,.special-item .special-body{flex:1}
+.nimby-item .nimby-name,.special-item .special-name{font-weight:600;font-size:.88rem;margin-bottom:2px}
+.nimby-item .nimby-desc,.special-item .special-desc{font-size:.78rem;color:var(--text-dim);line-height:1.5}

@@ -168,6 +168,32 @@
     /* ========== STATE ========== */
     let map, trendChart, ageChart;
     let currentSearch = {};
+    let searchMode = 'area'; // 'area' | 'address'
+
+    /* ========== NIMBY / SPECIAL DATA ========== */
+    const NIMBY_TYPES = [
+        { id:'temple', name:'宮廟', icon:'🏛', risk:'medium', desc:'噪音（法會、誦經）、燒金紙空氣品質、節慶活動交通壅塞，周邊房價約降 3-8%。' },
+        { id:'gas', name:'加油站', icon:'⛽', risk:'high', desc:'油氣味、地下油槽土壤污染風險、消防安全顧慮，周邊約降 5-10%。' },
+        { id:'funeral', name:'殯葬業/靈骨塔', icon:'⚰️', risk:'high', desc:'心理因素為主，嚴重影響轉手性，周邊房價約降 10-20%。' },
+        { id:'tower', name:'高壓電塔/變電所', icon:'⚡', risk:'high', desc:'電磁波疑慮、視覺壓迫、噪音，距 50 公尺內約降 8-15%。' },
+        { id:'highway', name:'高架橋/快速道路', icon:'🛣️', risk:'medium', desc:'噪音與振動、空氣品質較差、視覺遮蔽，前排約降 5-12%。' },
+        { id:'factory', name:'工廠/鐵皮屋', icon:'🏭', risk:'medium', desc:'噪音、粉塵、貨車出入頻繁，影響居住品質。' },
+        { id:'market', name:'傳統市場', icon:'🏪', risk:'low', desc:'清晨噪音、環境衛生，但生活機能佳，影響較兩面。' },
+        { id:'nightclub', name:'宮廟陣頭/KTV/夜店', icon:'🎤', risk:'medium', desc:'夜間噪音、出入份子複雜，社區安寧受影響。' },
+        { id:'cemetery', name:'公墓/墓地', icon:'🪦', risk:'high', desc:'心理嫌惡因素，視野內可見者約降 10-20%。' },
+        { id:'waste', name:'垃圾處理場/焚化爐', icon:'♻️', risk:'high', desc:'異味、空氣品質、清運車輛噪音，周邊約降 8-15%。' }
+    ];
+
+    const SPECIAL_CONDITIONS = [
+        { id:'murder', name:'凶宅', icon:'💀', severity:'critical', desc:'發生非自然死亡事件之房屋，房價約降 20-40%，銀行貸款成數可能受限。查詢方式：台灣凶宅網、向管委會/鄰居側面了解。' },
+        { id:'seasand', name:'海砂屋', icon:'🧱', severity:'critical', desc:'混凝土氯離子含量超標，結構有崩壞風險。可能被列為拆除重建對象，銀行多不承貸。查詢：建物謄本、氯離子檢測報告。' },
+        { id:'radiation', name:'輻射屋', icon:'☢️', severity:'critical', desc:'建材含輻射鋼筋（多為1982-1984年間建造），有健康疑慮。行政院原能會有列管清冊。' },
+        { id:'superficies', name:'地上權住宅', icon:'📋', severity:'warning', desc:'僅有建物使用權，無土地所有權，使用期限到期後須拆除歸還。貸款成數較低（約5-6成），轉手困難度高。' },
+        { id:'foreclosure', name:'法拍屋', icon:'⚖️', severity:'warning', desc:'法院拍賣取得，價格通常低於市價 7-8 成。風險：無法內部看屋、可能有占用問題、點交/不點交差異大。' },
+        { id:'hillside', name:'位於山坡地/順向坡', icon:'⛰️', severity:'warning', desc:'經政府列管之危險山坡地社區，有地質災害風險。暴雨期間可能有土石流疑慮。查詢：經濟部中央地質調查所。' },
+        { id:'flood', name:'易淹水區域', icon:'🌊', severity:'warning', desc:'歷年有淹水紀錄之區域，梅雨季與颱風季需注意。查詢：水利署淹水潛勢圖。' },
+        { id:'illegal', name:'違建/增建', icon:'🚧', severity:'warning', desc:'頂樓加蓋、陽台外推、夾層等違建，可能被舉報拆除。影響建物安全與保險理賠。' }
+    ];
 
     /* ========== INIT ========== */
     document.addEventListener('DOMContentLoaded', () => {
@@ -178,6 +204,7 @@
         initToggles();
         initCollapsible();
         initSuggest();
+        initSearchMode();
         initSearch();
         initMap();
         initCharts();
@@ -323,12 +350,42 @@
         });
     }
 
+    /* ========== SEARCH MODE ========== */
+    function initSearchMode() {
+        const toggleGroup = $('#toggleSearchMode');
+        if (!toggleGroup) return;
+        toggleGroup.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                toggleGroup.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                searchMode = btn.dataset.val;
+                $('#modeArea').style.display = searchMode === 'area' ? '' : 'none';
+                $('#modeAddress').style.display = searchMode === 'address' ? '' : 'none';
+            });
+        });
+        // Init addr parking toggle
+        const addrPark = $('#toggleAddrParking');
+        if (addrPark) {
+            addrPark.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    addrPark.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                });
+            });
+        }
+    }
+
     /* ========== SEARCH ========== */
     function initSearch() {
         $('#btnSearch').addEventListener('click', doSearch);
     }
 
     function doSearch() {
+        if (searchMode === 'address') {
+            doAddressSearch();
+            return;
+        }
+        // Area mode
         const city = $('#selCity').value;
         const dist = $('#selDistrict').value;
         const sub = $('#selSubArea').value;
@@ -337,6 +394,10 @@
         const parking = $$('#toggleParking .toggle-btn.active')[0]?.dataset.val || '不限';
 
         currentSearch = { city, dist, sub, types, ages, parking };
+
+        // Hide address section
+        const addrSec = $('#addressSection');
+        if (addrSec) addrSec.style.display = 'none';
 
         // Update map
         updateMapView(city, dist);
@@ -348,6 +409,243 @@
         updateAgeChart();
 
         toast(`已搜尋：${city} ${dist || '全區'} ${sub || ''}`, 'info');
+    }
+
+    /* ========== ADDRESS SEARCH ========== */
+    function parseAddress(addr) {
+        addr = addr.trim();
+        let city = '', district = '';
+        for (const c of Object.keys(AREAS)) {
+            if (addr.includes(c)) { city = c; break; }
+        }
+        if (!city) {
+            // Try to infer from district name
+            for (const [c, dists] of Object.entries(AREAS)) {
+                for (const d of Object.keys(dists)) {
+                    if (addr.includes(d)) { city = c; district = d; break; }
+                }
+                if (city) break;
+            }
+        } else {
+            for (const d of Object.keys(AREAS[city])) {
+                if (addr.includes(d)) { district = d; break; }
+            }
+        }
+        return { city, district };
+    }
+
+    function doAddressSearch() {
+        const addr = ($('#inputAddress')?.value || '').trim();
+        if (!addr) { toast('請輸入門牌地址', 'warning'); return; }
+
+        const parsed = parseAddress(addr);
+        if (!parsed.city || !parsed.district) {
+            toast('無法識別地址對應的行政區，請確認格式', 'warning');
+            return;
+        }
+
+        const city = parsed.city;
+        const dist = parsed.district;
+        const houseType = $('#addrHouseType').value;
+        const age = parseInt($('#addrAge').value) || 10;
+        const ping = parseFloat($('#addrPing').value) || 30;
+        const floor = parseInt($('#addrFloor').value) || 5;
+        const parking = $$('#toggleAddrParking .toggle-btn.active')[0]?.dataset.val || '無';
+        const layout = $('#addrLayout').value || '';
+
+        const distData = AREAS[city][dist];
+        const basePrice = distData.avg;
+
+        // Age multiplier
+        let ageMul = 1.0;
+        if (age <= 0) ageMul = 1.25;
+        else if (age <= 5) ageMul = 1.10;
+        else if (age <= 10) ageMul = 0.95;
+        else if (age <= 20) ageMul = 0.82;
+        else if (age <= 30) ageMul = 0.70;
+        else if (age <= 40) ageMul = 0.60;
+        else ageMul = 0.52;
+
+        // Type multiplier
+        let typeMul = 1.0;
+        if (houseType === '公寓') typeMul = 0.85;
+        else if (houseType === '華廈') typeMul = 0.92;
+        else if (houseType === '套房') typeMul = 0.88;
+        else if (houseType === '透天') typeMul = 1.05;
+
+        const estUnitPrice = +(basePrice * ageMul * typeMul).toFixed(1);
+        const estTotalPrice = +(estUnitPrice * ping).toFixed(0);
+
+        // Update map
+        updateMapView(city, dist);
+
+        // Update charts
+        currentSearch = { city, dist, sub: '', types: [houseType], ages: [], parking };
+        currentSearch.trendData = generateTrendData(basePrice);
+        currentSearch.ageData = generateAgeData(basePrice);
+        updateTrendChart();
+        updateAgeChart();
+
+        // Show address section
+        const addrSec = $('#addressSection');
+        addrSec.style.display = '';
+
+        // Render comparable
+        renderAddressComparable(addr, city, dist, distData, {
+            houseType, age, ping, floor, parking, layout, estUnitPrice, estTotalPrice
+        });
+
+        // Render NIMBY
+        renderNimby(city, dist, addr);
+
+        // Render special conditions
+        renderSpecialConditions(age, houseType);
+
+        addrSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        toast(`已分析：${addr}`, 'info');
+    }
+
+    function renderAddressComparable(addr, city, dist, distData, info) {
+        const container = $('#addrComparable');
+        const ageLabel = info.age <= 0 ? '預售屋' : info.age <= 5 ? '新成屋' : `屋齡 ${info.age} 年`;
+        const priceColor = info.estUnitPrice >= 100 ? 'var(--danger)' : info.estUnitPrice >= 60 ? 'var(--warning)' : 'var(--success)';
+        const diffPct = (((info.estUnitPrice / distData.avg) - 1) * 100).toFixed(1);
+        const diffLabel = diffPct > 0 ? `高於區域均價 ${diffPct}%` : diffPct < 0 ? `低於區域均價 ${Math.abs(diffPct)}%` : '與區域均價持平';
+
+        container.innerHTML = `
+            <h3 class="card-title">同類型區域行情分析</h3>
+            <p style="font-size:.82rem;color:var(--text-dim);margin-bottom:12px">
+                <strong>${addr}</strong>｜${info.houseType}｜${ageLabel}｜${info.ping} 坪${info.layout ? '｜' + info.layout : ''}${info.floor ? '｜' + info.floor + 'F' : ''}${info.parking === '有' ? '｜含車位' : ''}
+            </p>
+            <div class="addr-comparable-grid">
+                <div class="addr-stat">
+                    <span class="stat-val" style="color:${priceColor}">${info.estUnitPrice}</span>
+                    <span class="stat-label">估算單價（萬/坪）</span>
+                </div>
+                <div class="addr-stat">
+                    <span class="stat-val">${info.estTotalPrice}</span>
+                    <span class="stat-label">估算總價（萬）</span>
+                </div>
+                <div class="addr-stat">
+                    <span class="stat-val">${distData.avg}</span>
+                    <span class="stat-label">${dist} 區域均價（萬/坪）</span>
+                </div>
+                <div class="addr-stat">
+                    <span class="stat-val" style="color:${diffPct >= 0 ? 'var(--danger)' : 'var(--success)'}">${diffLabel}</span>
+                    <span class="stat-label">與區域均價比較</span>
+                </div>
+            </div>
+            <div style="margin-top:16px">
+                <h4 style="font-size:.88rem;font-weight:600;margin-bottom:8px">所屬生活圈</h4>
+                <div class="addr-tag-list">
+                    ${distData.subs.map(s => `<span class="addr-tag tag-info">${s}</span>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    function renderNimby(city, dist, addr) {
+        const container = $('#addrNimbyList');
+        // Simulate NIMBY detection based on district characteristics
+        const nimbyMap = {
+            '萬華區': ['temple','market','nightclub'],
+            '大同區': ['temple','market','factory'],
+            '中正區': ['highway'],
+            '信義區': ['highway'],
+            '松山區': ['highway'],
+            '中山區': ['nightclub'],
+            '三重區': ['factory','temple','highway'],
+            '蘆洲區': ['temple','factory'],
+            '新莊區': ['factory','temple'],
+            '中和區': ['factory','highway'],
+            '土城區': ['factory','cemetery'],
+            '樹林區': ['factory','cemetery'],
+            '五股區': ['factory','waste'],
+            '泰山區': ['factory'],
+            '汐止區': ['highway'],
+            '林口區': ['highway'],
+            '淡水區': ['highway'],
+            '板橋區': ['highway','temple'],
+            '永和區': ['market'],
+            '新店區': ['hillside','highway'],
+            '內湖區': ['highway'],
+            '文山區': ['hillside'],
+            '北投區': ['temple'],
+            '士林區': ['temple','market'],
+            '南港區': ['factory','highway'],
+            '大安區': [],
+            '三峽區': ['hillside']
+        };
+
+        const detected = (nimbyMap[dist] || []).map(id => NIMBY_TYPES.find(n => n.id === id)).filter(Boolean);
+
+        if (detected.length === 0) {
+            container.innerHTML = `
+                <div class="nimby-item">
+                    <div class="nimby-icon" style="background:rgba(5,150,105,.1)">✅</div>
+                    <div class="nimby-body">
+                        <div class="nimby-name" style="color:var(--success)">未偵測到明顯鄰避設施</div>
+                        <div class="nimby-desc">該區域周邊環境相對單純，但仍建議實地查看確認。</div>
+                    </div>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = detected.map(n => {
+            const riskColor = n.risk === 'high' ? 'var(--danger)' : n.risk === 'medium' ? 'var(--warning)' : 'var(--text-dim)';
+            const riskBg = n.risk === 'high' ? 'rgba(220,38,38,.1)' : n.risk === 'medium' ? 'rgba(217,119,6,.1)' : 'rgba(148,163,184,.1)';
+            const riskLabel = n.risk === 'high' ? '高風險' : n.risk === 'medium' ? '中風險' : '低風險';
+            return `
+                <div class="nimby-item">
+                    <div class="nimby-icon" style="background:${riskBg};font-size:16px">${n.icon}</div>
+                    <div class="nimby-body">
+                        <div class="nimby-name">${n.name} <span class="addr-tag ${n.risk === 'high' ? 'tag-danger' : n.risk === 'medium' ? 'tag-warning' : 'tag-safe'}" style="font-size:.72rem;padding:2px 8px">${riskLabel}</span></div>
+                        <div class="nimby-desc">${n.desc}</div>
+                    </div>
+                </div>`;
+        }).join('');
+    }
+
+    function renderSpecialConditions(age, houseType) {
+        const container = $('#addrSpecialList');
+        // Determine which conditions to flag based on property characteristics
+        const flags = [];
+
+        // Old buildings: check sea-sand, radiation
+        if (age >= 35 && age <= 45) {
+            flags.push('radiation');
+        }
+        if (age >= 30) {
+            flags.push('seasand');
+        }
+        if (age >= 25) {
+            flags.push('illegal');
+        }
+
+        // Always show general awareness items
+        const awareness = ['murder', 'superficies', 'foreclosure', 'flood', 'hillside'];
+
+        const allFlags = [...new Set([...flags, ...awareness])];
+        const items = allFlags.map(id => SPECIAL_CONDITIONS.find(s => s.id === id)).filter(Boolean);
+
+        container.innerHTML = `
+            <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:12px">以下為該房型（${houseType}，屋齡 ${age} 年）應注意的特殊狀況檢查清單：</p>
+            ${items.map(s => {
+                const isPrimary = flags.includes(s.id);
+                const sevColor = s.severity === 'critical' ? 'var(--danger)' : 'var(--warning)';
+                const sevBg = s.severity === 'critical' ? 'rgba(220,38,38,.1)' : 'rgba(217,119,6,.1)';
+                const sevTag = s.severity === 'critical' ? 'tag-danger' : 'tag-warning';
+                const sevLabel = s.severity === 'critical' ? '嚴重' : '注意';
+                return `
+                    <div class="special-item" ${isPrimary ? `style="border-left:3px solid ${sevColor}"` : ''}>
+                        <div class="special-icon" style="background:${sevBg};font-size:16px">${s.icon}</div>
+                        <div class="special-body">
+                            <div class="special-name">${s.name} <span class="addr-tag ${sevTag}" style="font-size:.72rem;padding:2px 8px">${sevLabel}</span>${isPrimary ? ' <span class="addr-tag tag-danger" style="font-size:.72rem;padding:2px 8px">此屋齡需特別留意</span>' : ''}</div>
+                            <div class="special-desc">${s.desc}</div>
+                        </div>
+                    </div>`;
+            }).join('')}
+        `;
     }
 
     /* ========== MAP ========== */

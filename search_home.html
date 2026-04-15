@@ -47,6 +47,17 @@
                 搜尋條件
             </h2>
             <div class="card">
+                <!-- Search Mode Toggle -->
+                <div class="form-group" style="margin-bottom:16px">
+                    <label class="form-label">搜尋模式</label>
+                    <div class="toggle-group" id="toggleSearchMode">
+                        <button class="toggle-btn active" data-val="area">依區域搜尋</button>
+                        <button class="toggle-btn" data-val="address">依門牌地址搜尋</button>
+                    </div>
+                </div>
+
+                <!-- === Mode A: Area Search === -->
+                <div id="modeArea">
                 <div class="form-grid form-grid-3" style="margin-bottom:14px">
                     <div class="form-group">
                         <label class="form-label">縣市</label>
@@ -191,6 +202,52 @@
                         </table>
                     </details>
                 </div>
+                </div><!-- end modeArea -->
+
+                <!-- === Mode B: Address Search === -->
+                <div id="modeAddress" style="display:none">
+                    <div class="form-group" style="margin-bottom:14px">
+                        <label class="form-label">門牌地址</label>
+                        <input type="text" class="input" id="inputAddress" placeholder="例：新北市板橋區文化路一段100號">
+                    </div>
+                    <div class="form-grid form-grid-3" style="margin-bottom:14px">
+                        <div class="form-group">
+                            <label class="form-label">房型</label>
+                            <select class="input" id="addrHouseType">
+                                <option value="大樓">大樓</option>
+                                <option value="華廈">華廈</option>
+                                <option value="公寓">公寓</option>
+                                <option value="套房">套房</option>
+                                <option value="透天">透天</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">屋齡（年）</label>
+                            <input type="number" class="input" id="addrAge" value="10" min="0" max="80">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">建坪（坪）</label>
+                            <input type="number" class="input" id="addrPing" value="30" min="0" max="200">
+                        </div>
+                    </div>
+                    <div class="form-grid form-grid-3" style="margin-bottom:14px">
+                        <div class="form-group">
+                            <label class="form-label">樓層</label>
+                            <input type="number" class="input" id="addrFloor" value="5" min="1" max="60">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">有無車位</label>
+                            <div class="toggle-group" id="toggleAddrParking">
+                                <button class="toggle-btn active" data-val="無">無</button>
+                                <button class="toggle-btn" data-val="有">有</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">格局</label>
+                            <input type="text" class="input" id="addrLayout" placeholder="例：3房2廳2衛">
+                        </div>
+                    </div>
+                </div><!-- end modeAddress -->
 
                 <div style="margin-top:16px">
                     <button class="btn btn-primary" id="btnSearch">
@@ -251,6 +308,36 @@
                 </div>
                 <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:12px">同區域同房型，單價已扣除車位</p>
                 <div class="chart-container"><canvas id="chartAge"></canvas></div>
+            </div>
+        </section>
+
+        <!-- ADDRESS ANALYSIS SECTION (hidden by default) -->
+        <section class="section" id="addressSection" style="display:none">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                門牌地址分析結果
+            </h2>
+
+            <!-- Area Comparable -->
+            <div class="card" id="addrComparable"></div>
+
+            <!-- Special Conditions -->
+            <div class="card" id="addrSpecialCard">
+                <h3 class="card-title" style="color:var(--danger)">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:var(--danger);vertical-align:middle;margin-right:4px"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                    房屋特殊狀況提醒
+                </h3>
+                <div id="addrSpecialList"></div>
+            </div>
+
+            <!-- NIMBY (鄰避設施) -->
+            <div class="card" id="addrNimbyCard">
+                <h3 class="card-title">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:var(--warning);vertical-align:middle;margin-right:4px"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    鄰避設施 &amp; 周邊環境概況
+                </h3>
+                <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:12px">依門牌地址半徑 500 公尺內偵測，僅供參考需實地確認。</p>
+                <div id="addrNimbyList"></div>
             </div>
         </section>
     </div>

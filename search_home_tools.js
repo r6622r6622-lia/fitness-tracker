@@ -409,8 +409,18 @@
     /* ========== CONSTRUCTION ========== */
     function initConstruction() {
         const sel = $('#constArea');
-        const allAreas = new Set(CONSTRUCTIONS.map(c => c.area));
-        allAreas.forEach(a => { sel.innerHTML += `<option value="${a}">${a}</option>`; });
+        // Include ALL districts from both cities, not just those with projects
+        const allDistricts = [];
+        for (const [city, districts] of Object.entries(AREAS)) {
+            for (const d of Object.keys(districts)) {
+                allDistricts.push(d);
+            }
+        }
+        const areasWithProjects = new Set(CONSTRUCTIONS.map(c => c.area));
+        allDistricts.forEach(a => {
+            const hasProject = areasWithProjects.has(a);
+            sel.innerHTML += `<option value="${a}">${a}${hasProject ? '' : '（近期無重大建設）'}</option>`;
+        });
 
         sel.addEventListener('change', renderConstructions);
         renderConstructions();
@@ -422,7 +432,7 @@
         const container = $('#constList');
 
         if (filtered.length === 0) {
-            container.innerHTML = '<div class="empty-state"><p>該區域目前無重大建設資訊。</p></div>';
+            container.innerHTML = `<div class="empty-state"><p>${filter ? filter + ' 近期無重大建設資訊。' : '目前無建設資訊。'}<br><span style="font-size:.82rem;color:var(--text-muted)">代表該區域目前沒有進行中或規劃中的重大公共建設與重劃區開發，但不排除小型都更或民間建案。</span></p></div>`;
             return;
         }
 
