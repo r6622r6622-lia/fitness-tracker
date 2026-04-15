@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomeScope — 分析工具</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="search_home.css">
+</head>
+<body>
+    <!-- NAV -->
+    <nav class="navbar" id="navbar">
+        <a href="search_home.html" class="nav-brand">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span class="brand-text">HomeScope</span>
+        </a>
+        <div class="nav-center">
+            <button class="nav-tab active" data-tool="mortgage">房貸試算</button>
+            <button class="nav-tab" data-tool="compare">區域比較</button>
+            <button class="nav-tab" data-tool="score">CP值評分</button>
+            <button class="nav-tab" data-tool="tracker">價格追蹤</button>
+            <button class="nav-tab" data-tool="construction">周邊建設</button>
+        </div>
+        <div class="nav-actions">
+            <a href="search_home.html" class="nav-btn">
+                <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                返回搜尋
+            </a>
+            <button class="nav-btn" id="btnTheme">
+                <svg viewBox="0 0 24 24" id="themeIcon"><path d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>
+                <span id="themeLabel">深色</span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="page-body">
+        <!-- TAB BAR (mobile) -->
+        <div class="tab-bar" id="toolTabBar">
+            <button class="tab-item active" data-tool="mortgage">房貸試算</button>
+            <button class="tab-item" data-tool="compare">區域比較</button>
+            <button class="tab-item" data-tool="score">CP值評分</button>
+            <button class="tab-item" data-tool="tracker">價格追蹤</button>
+            <button class="tab-item" data-tool="construction">周邊建設</button>
+        </div>
+
+        <!-- ===== MORTGAGE ===== -->
+        <div class="tab-panel active" id="panel-mortgage">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+                房貸試算器
+            </h2>
+
+            <div class="card">
+                <h3 class="card-title">基本房貸計算</h3>
+                <div class="form-grid form-grid-2" style="margin-bottom:14px">
+                    <div class="form-group">
+                        <label class="form-label">房屋總價（萬元）</label>
+                        <input type="number" class="input" id="mortTotal" value="1500" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">頭期款比例（%）</label>
+                        <input type="number" class="input" id="mortDown" value="20" min="0" max="100">
+                    </div>
+                </div>
+                <div class="form-grid form-grid-2" style="margin-bottom:14px">
+                    <div class="form-group">
+                        <label class="form-label">貸款年利率（%）</label>
+                        <input type="number" class="input" id="mortRate" value="2.1" min="0" step="0.05">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">貸款年限（年）</label>
+                        <select class="input" id="mortYears">
+                            <option value="20">20 年</option>
+                            <option value="30" selected>30 年</option>
+                            <option value="40">40 年</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="btnCalcMort">計算房貸</button>
+
+                <div class="mortgage-result" id="mortResult" style="display:none"></div>
+            </div>
+
+            <!-- Extra costs -->
+            <div class="card">
+                <h3 class="card-title">額外自備款試算</h3>
+                <p style="font-size:.82rem;color:var(--text-dim);margin-bottom:14px">
+                    除了頭期款之外，買房還有以下必要支出，合計可能佔總價的 5-15%。
+                </p>
+                <div class="form-grid form-grid-2" style="margin-bottom:14px">
+                    <div class="form-group">
+                        <label class="form-label">房屋總價（萬元）</label>
+                        <input type="number" class="input" id="extraTotal" value="1500" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">建坪（坪）</label>
+                        <input type="number" class="input" id="extraPing" value="30" min="0">
+                    </div>
+                </div>
+                <div class="form-grid form-grid-2" style="margin-bottom:14px">
+                    <div class="form-group">
+                        <label class="form-label">屋齡分類</label>
+                        <select class="input" id="extraAge">
+                            <option value="預售屋">預售屋 / 新成屋</option>
+                            <option value="中古6-10">中古 6-10年</option>
+                            <option value="中古11-20">中古 11-20年</option>
+                            <option value="中古21-30">中古 21-30年</option>
+                            <option value="中古30+">中古 30年以上</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">是否透過仲介</label>
+                        <div class="toggle-group" id="toggleAgent">
+                            <button class="toggle-btn active" data-val="yes">是</button>
+                            <button class="toggle-btn" data-val="no">否</button>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="btnCalcExtra">計算額外費用</button>
+
+                <div id="extraResult" style="display:none"></div>
+            </div>
+        </div>
+
+        <!-- ===== COMPARE ===== -->
+        <div class="tab-panel" id="panel-compare">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24"><path d="M10 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h5v-2H5V5h5V3zm4 18h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-5v2h5v14h-5v2z"/></svg>
+                區域比較（最多3區）
+            </h2>
+            <div class="card">
+                <div class="form-grid form-grid-3" style="margin-bottom:14px">
+                    <div class="form-group">
+                        <label class="form-label">區域 A</label>
+                        <select class="input compare-sel" id="compA"><option value="">-- 選擇 --</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">區域 B</label>
+                        <select class="input compare-sel" id="compB"><option value="">-- 選擇 --</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">區域 C（選填）</label>
+                        <select class="input compare-sel" id="compC"><option value="">-- 不比較 --</option></select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="btnCompare">比較</button>
+            </div>
+            <div class="compare-grid" id="compareResult"></div>
+        </div>
+
+        <!-- ===== SCORE ===== -->
+        <div class="tab-panel" id="panel-score">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                CP值評分排行
+            </h2>
+            <div class="card">
+                <p style="font-size:.82rem;color:var(--text-dim);margin-bottom:16px">
+                    依據平均單價、捷運可及性、商圈距離、生活機能加權計算，分數越高代表性價比越好。
+                </p>
+                <div class="form-grid form-grid-2" style="margin-bottom:14px">
+                    <div class="form-group">
+                        <label class="form-label">縣市</label>
+                        <select class="input" id="scoreCity">
+                            <option value="台北市">台北市</option>
+                            <option value="新北市" selected>新北市</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">房型</label>
+                        <select class="input" id="scoreType">
+                            <option value="大樓">大樓</option>
+                            <option value="公寓">公寓</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="btnScore">計算排行</button>
+                <div id="scoreResult" style="margin-top:20px"></div>
+            </div>
+        </div>
+
+        <!-- ===== TRACKER ===== -->
+        <div class="tab-panel" id="panel-tracker">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                價格追蹤
+            </h2>
+            <div class="card">
+                <p style="font-size:.82rem;color:var(--text-dim);margin-bottom:14px">
+                    設定目標區域與理想價格，下次開啟時自動比對是否有新成交落入範圍。資料儲存於瀏覽器本機。
+                </p>
+                <div class="form-grid form-grid-3" style="margin-bottom:14px">
+                    <div class="form-group">
+                        <label class="form-label">追蹤區域</label>
+                        <select class="input" id="trackArea"><option value="">-- 選擇 --</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">目標單價上限（萬/坪）</label>
+                        <input type="number" class="input" id="trackMaxPrice" value="60" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">&nbsp;</label>
+                        <button class="btn btn-primary btn-block" id="btnAddTrack">加入追蹤</button>
+                    </div>
+                </div>
+                <div id="trackList"></div>
+            </div>
+        </div>
+
+        <!-- ===== CONSTRUCTION ===== -->
+        <div class="tab-panel" id="panel-construction">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24"><path d="M13 13v8h8v-8h-8zM3 21h8v-8H3v8zM3 3v8h8V3H3zm13.66-1.31L11 7.34 16.66 13l5.66-5.66-5.66-5.65z"/></svg>
+                周邊重大建設
+            </h2>
+            <div class="card">
+                <p style="font-size:.82rem;color:var(--text-dim);margin-bottom:14px">
+                    標註規劃中或進行中的重大建設，供您評估區域未來發展潛力。
+                </p>
+                <div class="form-group" style="margin-bottom:14px">
+                    <label class="form-label">篩選區域</label>
+                    <select class="input" id="constArea"><option value="">全部地區</option></select>
+                </div>
+                <div id="constList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <footer class="footer">
+        <p>HomeScope &copy; 2026 — 資料來源：內政部實價登錄開放資料。本站分析僅供參考，不構成投資建議。</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="search_home_tools.js"></script>
+</body>
+</html>

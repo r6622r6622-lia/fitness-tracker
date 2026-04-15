@@ -1,0 +1,524 @@
+/* ========================================
+   HomeScope — search_home.js
+   ======================================== */
+(function () {
+    'use strict';
+
+    const $ = s => document.querySelector(s);
+    const $$ = s => document.querySelectorAll(s);
+
+    /* ========== AREA DATA ========== */
+    const AREAS = {
+        '台北市': {
+            '中正區': { subs: ['站前商圈','南門/牯嶺街','古亭/師大','公館/水源'], center: [25.0320, 121.5180], avg: 102 },
+            '大同區': { subs: ['大稻埕/迪化街','圓環/寧夏','民權西路站'], center: [25.0636, 121.5130], avg: 85 },
+            '中山區': { subs: ['中山站商圈','林森北路','大直/美麗華','松江南京'], center: [25.0640, 121.5330], avg: 95 },
+            '松山區': { subs: ['民生社區','小巨蛋/南京復興','饒河/松山車站'], center: [25.0600, 121.5580], avg: 100 },
+            '大安區': { subs: ['忠孝東區','敦南/安和','信義安和','和平/師大','六張犁'], center: [25.0267, 121.5430], avg: 125 },
+            '萬華區': { subs: ['西門町','龍山寺/剝皮寮','青年公園'], center: [25.0350, 121.4980], avg: 72 },
+            '信義區': { subs: ['信義計畫區','永春/松山車站','吳興街/象山'], center: [25.0330, 121.5680], avg: 108 },
+            '士林區': { subs: ['士林站/芝山','天母','社子'], center: [25.0930, 121.5250], avg: 82 },
+            '北投區': { subs: ['北投溫泉區','石牌/榮總','關渡/復興崗'], center: [25.1320, 121.5010], avg: 72 },
+            '內湖區': { subs: ['內湖科技園區','東湖','碧湖/文德'], center: [25.0830, 121.5880], avg: 78 },
+            '南港區': { subs: ['南港車站/經貿園區','舊莊'], center: [25.0550, 121.6060], avg: 85 },
+            '文山區': { subs: ['景美/萬隆','木柵/政大','考試院/辛亥'], center: [24.9930, 121.5550], avg: 68 }
+        },
+        '新北市': {
+            '板橋區': { subs: ['新板特區','江翠北重劃區','府中商圈','海山/亞東','浮洲','板橋後站'], center: [25.0145, 121.4590], avg: 62 },
+            '中和區': { subs: ['中和環球/景平','景安/南勢角','連城路','中和工業區周邊'], center: [24.9990, 121.4940], avg: 56 },
+            '永和區': { subs: ['頂溪/永安市場','樂華商圈','仁愛公園/福和'], center: [25.0090, 121.5130], avg: 63 },
+            '新莊區': { subs: ['新莊副都心','幸福路商圈','丹鳳/輔大','頭前重劃區'], center: [25.0360, 121.4320], avg: 55 },
+            '三重區': { subs: ['三重站/二重疏洪','菜寮','先嗇宮','三和國中/中央路'], center: [25.0620, 121.4870], avg: 58 },
+            '蘆洲區': { subs: ['徐匯中學周邊','長榮路商圈','重陽重劃區'], center: [25.0850, 121.4730], avg: 52 },
+            '新店區': { subs: ['大坪林/七張','安坑','小碧潭/十四張','央北重劃區'], center: [24.9680, 121.5380], avg: 58 },
+            '土城區': { subs: ['土城站/金城路','頂埔/永寧','海山/清水'], center: [24.9720, 121.4430], avg: 48 },
+            '汐止區': { subs: ['汐止車站','汐科/遠雄','社后/樟樹灣'], center: [25.0680, 121.6480], avg: 42 },
+            '林口區': { subs: ['林口新市鎮/A9站','工一重劃區','林口舊市區'], center: [25.0770, 121.3740], avg: 45 },
+            '淡水區': { subs: ['紅樹林','淡海新市鎮','淡水老街/沙崙'], center: [25.1690, 121.4410], avg: 30 },
+            '五股區': { subs: ['洲子洋重劃區','成泰路/五股工業區'], center: [25.0830, 121.4380], avg: 40 },
+            '泰山區': { subs: ['明志科大周邊','塭仔圳重劃區'], center: [25.0580, 121.4230], avg: 45 },
+            '三峽區': { subs: ['北大特區','三峽老街/市區'], center: [24.9340, 121.3690], avg: 38 },
+            '樹林區': { subs: ['樹林車站','山佳/柑園'], center: [24.9900, 121.4170], avg: 36 }
+        }
+    };
+
+    /* MRT Stations (major) */
+    const MRT_STATIONS = [
+        { name:'台北車站', lat:25.0478, lng:121.5170, lines:['紅','藍'] },
+        { name:'中山', lat:25.0530, lng:121.5210, lines:['紅','綠'] },
+        { name:'忠孝復興', lat:25.0416, lng:121.5435, lines:['藍','棕'] },
+        { name:'忠孝新生', lat:25.0420, lng:121.5324, lines:['藍','橘'] },
+        { name:'古亭', lat:25.0263, lng:121.5228, lines:['綠','橘'] },
+        { name:'西門', lat:25.0421, lng:121.5083, lines:['藍','綠'] },
+        { name:'東門', lat:25.0339, lng:121.5289, lines:['紅','橘'] },
+        { name:'大安', lat:25.0330, lng:121.5435, lines:['紅','棕'] },
+        { name:'南京復興', lat:25.0522, lng:121.5449, lines:['綠','棕'] },
+        { name:'松江南京', lat:25.0519, lng:121.5328, lines:['綠','橘'] },
+        { name:'民權西路', lat:25.0628, lng:121.5193, lines:['紅','橘'] },
+        { name:'板橋', lat:25.0145, lng:121.4626, lines:['藍'] },
+        { name:'新埔', lat:25.0244, lng:121.4685, lines:['藍'] },
+        { name:'永安市場', lat:25.0105, lng:121.5121, lines:['橘'] },
+        { name:'景安', lat:24.9938, lng:121.5047, lines:['橘'] },
+        { name:'新莊', lat:25.0364, lng:121.4321, lines:['橘'] },
+        { name:'頭前庄', lat:25.0425, lng:121.4416, lines:['橘'] },
+        { name:'三重', lat:25.0611, lng:121.4849, lines:['橘'] },
+        { name:'蘆洲', lat:25.0917, lng:121.4637, lines:['橘'] },
+        { name:'徐匯中學', lat:25.0837, lng:121.4730, lines:['橘'] },
+        { name:'大坪林', lat:24.9824, lng:121.5415, lines:['綠'] },
+        { name:'七張', lat:24.9756, lng:121.5430, lines:['綠'] },
+        { name:'小碧潭', lat:24.9750, lng:121.5290, lines:['綠'] },
+        { name:'信義安和', lat:25.0330, lng:121.5530, lines:['紅'] },
+        { name:'象山', lat:25.0330, lng:121.5700, lines:['紅'] },
+        { name:'士林', lat:25.0930, lng:121.5260, lines:['紅'] },
+        { name:'芝山', lat:25.0998, lng:121.5265, lines:['紅'] },
+        { name:'石牌', lat:25.1125, lng:121.5163, lines:['紅'] },
+        { name:'北投', lat:25.1315, lng:121.4993, lines:['紅'] },
+        { name:'南港', lat:25.0530, lng:121.6068, lines:['藍'] },
+        { name:'內湖', lat:25.0840, lng:121.5888, lines:['棕'] },
+        { name:'土城', lat:24.9729, lng:121.4430, lines:['藍'] },
+        { name:'頂埔', lat:24.9600, lng:121.4204, lines:['藍'] },
+        { name:'亞東醫院', lat:24.9980, lng:121.4520, lines:['藍'] },
+        { name:'府中', lat:25.0082, lng:121.4599, lines:['藍'] },
+        { name:'汐止', lat:25.0631, lng:121.6393, lines:[] },
+        { name:'林口A9', lat:25.0701, lng:121.3747, lines:['機捷'] }
+    ];
+
+    /* Highway Interchanges */
+    const HIGHWAYS = [
+        { name:'圓山交流道', lat:25.0710, lng:121.5240 },
+        { name:'內湖交流道', lat:25.0770, lng:121.5760 },
+        { name:'堤頂交流道', lat:25.0689, lng:121.5580 },
+        { name:'環北交流道', lat:25.0100, lng:121.4600 },
+        { name:'中和交流道', lat:24.9950, lng:121.4830 },
+        { name:'新莊交流道', lat:25.0380, lng:121.4120 },
+        { name:'五股交流道', lat:25.0830, lng:121.4350 },
+        { name:'汐止交流道', lat:25.0600, lng:121.6400 },
+        { name:'安坑交流道', lat:24.9700, lng:121.5150 },
+        { name:'土城交流道', lat:24.9700, lng:121.4300 },
+        { name:'樹林交流道', lat:24.9900, lng:121.4050 },
+        { name:'林口交流道', lat:25.0700, lng:121.3700 },
+        { name:'三重交流道', lat:25.0630, lng:121.4750 }
+    ];
+
+    /* Business Districts */
+    const BIZ_DISTRICTS = [
+        { name:'信義商圈', lat:25.0360, lng:121.5660 },
+        { name:'西門商圈', lat:25.0420, lng:121.5080 },
+        { name:'東區商圈', lat:25.0410, lng:121.5500 },
+        { name:'士林夜市', lat:25.0880, lng:121.5240 },
+        { name:'師大商圈', lat:25.0260, lng:121.5290 },
+        { name:'公館商圈', lat:25.0140, lng:121.5340 },
+        { name:'天母商圈', lat:25.1130, lng:121.5250 },
+        { name:'板橋新板', lat:25.0150, lng:121.4630 },
+        { name:'新莊幸福路', lat:25.0360, lng:121.4350 },
+        { name:'三重正義北路', lat:25.0630, lng:121.4850 },
+        { name:'蘆洲長榮路', lat:25.0880, lng:121.4720 },
+        { name:'中和環球', lat:25.0000, lng:121.4930 },
+        { name:'永和樂華', lat:25.0100, lng:121.5080 },
+        { name:'林口三井Outlet', lat:25.0650, lng:121.3720 }
+    ];
+
+    /* Suggest data */
+    const FAMILY_SUGGEST = {
+        single:   { label:'單身(1人)', layout:'1房1廳1衛', minPing:12, maxPing:18, detail:'客廳4 + 臥4 + 衛1 + 廚2 + 走道1' },
+        couple:   { label:'情侶/夫妻(2人)', layout:'2房1廳1衛', minPing:18, maxPing:24, detail:'客廳5 + 主臥4 + 書房3 + 衛1.5 + 廚2.5 + 走道2' },
+        small:    { label:'小家庭-1孩(3人)', layout:'2-3房2廳2衛', minPing:24, maxPing:30, detail:'客餐7 + 主臥5 + 次臥3 + 衛×2=3 + 廚3 + 走道3' },
+        standard: { label:'標準家庭-2孩(4人)', layout:'3房2廳2衛', minPing:30, maxPing:38, detail:'客餐8 + 主臥5 + 次臥×2=7 + 衛3 + 廚3 + 走道4' },
+        extended: { label:'三代同堂(5-6人)', layout:'4房2廳2衛', minPing:38, maxPing:50, detail:'客餐9 + 主臥5 + 次臥×3=11 + 衛3 + 廚3 + 走道5 + 儲2' }
+    };
+
+    const COMMON_RATIO = {
+        '公寓':   { '10以內': 0.10, '10-20': 0.10, '20以上': 0.10 },
+        '華廈':   { '10以內': 0.25, '10-20': 0.22, '20以上': 0.18 },
+        '大樓':   { '10以內': 0.33, '10-20': 0.30, '20以上': 0.25 },
+        '預售屋': { '10以內': 0.35, '10-20': 0.35, '20以上': 0.35 }
+    };
+
+    /* Demo price data for charts */
+    function generateTrendData(basePrice) {
+        const quarters = [];
+        const now = new Date();
+        for (let i = 19; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i * 3, 1);
+            const y = d.getFullYear();
+            const q = Math.floor(d.getMonth() / 3) + 1;
+            const variation = (Math.random() - 0.35) * 4;
+            const trend = (19 - i) * 0.6;
+            quarters.push({
+                label: `${y}Q${q}`,
+                unit: +(basePrice + trend + variation).toFixed(1),
+                total: +((basePrice + trend + variation) * 28).toFixed(0)
+            });
+        }
+        return quarters;
+    }
+
+    function generateAgeData(basePrice) {
+        return {
+            '預售屋': { unit: +(basePrice * 1.25).toFixed(1), total: +(basePrice * 1.25 * 30).toFixed(0) },
+            '新成屋': { unit: +(basePrice * 1.10).toFixed(1), total: +(basePrice * 1.10 * 28).toFixed(0) },
+            '中古6-10年': { unit: +(basePrice * 0.95).toFixed(1), total: +(basePrice * 0.95 * 26).toFixed(0) },
+            '中古11-20年': { unit: +(basePrice * 0.82).toFixed(1), total: +(basePrice * 0.82 * 25).toFixed(0) },
+            '中古21-30年': { unit: +(basePrice * 0.70).toFixed(1), total: +(basePrice * 0.70 * 24).toFixed(0) },
+            '中古31-40年': { unit: +(basePrice * 0.60).toFixed(1), total: +(basePrice * 0.60 * 22).toFixed(0) },
+            '中古40年以上': { unit: +(basePrice * 0.52).toFixed(1), total: +(basePrice * 0.52 * 20).toFixed(0) }
+        };
+    }
+
+    /* ========== STATE ========== */
+    let map, trendChart, ageChart;
+    let currentSearch = {};
+
+    /* ========== INIT ========== */
+    document.addEventListener('DOMContentLoaded', () => {
+        initTheme();
+        initNav();
+        initSelectors();
+        initChips();
+        initToggles();
+        initCollapsible();
+        initSuggest();
+        initSearch();
+        initMap();
+        initCharts();
+        doSearch();
+    });
+
+    /* ========== THEME ========== */
+    function initTheme() {
+        const saved = localStorage.getItem('hs_theme');
+        if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        updateThemeBtn();
+        $('#btnTheme').addEventListener('click', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('hs_theme', 'light'); }
+            else { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('hs_theme', 'dark'); }
+            updateThemeBtn();
+            if (map) setTimeout(() => map.invalidateSize(), 300);
+        });
+    }
+    function updateThemeBtn() {
+        const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+        $('#themeIcon').innerHTML = dark
+            ? '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0a.996.996 0 000-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/>'
+            : '<path d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/>';
+        $('#themeLabel').textContent = dark ? '淺色' : '深色';
+    }
+
+    /* ========== NAV ========== */
+    function initNav() {
+        window.addEventListener('scroll', () => {
+            $('#navbar').classList.toggle('scrolled', window.scrollY > 20);
+            const sections = ['searchSection', 'mapSection', 'chartSection'];
+            let current = sections[0];
+            for (const id of sections) {
+                const el = document.getElementById(id);
+                if (el && el.getBoundingClientRect().top <= 100) current = id;
+            }
+            $$('.nav-tab[data-nav]').forEach(t => t.classList.toggle('active', t.getAttribute('href') === '#' + current));
+        });
+        $$('.nav-tab[data-nav]').forEach(t => t.addEventListener('click', e => {
+            e.preventDefault();
+            document.getElementById(t.getAttribute('href').slice(1))?.scrollIntoView({ behavior: 'smooth' });
+        }));
+    }
+
+    /* ========== SELECTORS ========== */
+    function initSelectors() {
+        const cityEl = $('#selCity');
+        const distEl = $('#selDistrict');
+        const subEl = $('#selSubArea');
+
+        function populateDistricts() {
+            const city = cityEl.value;
+            const districts = AREAS[city] || {};
+            distEl.innerHTML = '<option value="">-- 請選擇 --</option>';
+            Object.keys(districts).forEach(d => {
+                distEl.innerHTML += `<option value="${d}">${d}</option>`;
+            });
+            subEl.innerHTML = '<option value="">-- 全部 --</option>';
+        }
+
+        function populateSubs() {
+            const city = cityEl.value;
+            const dist = distEl.value;
+            subEl.innerHTML = '<option value="">-- 全部 --</option>';
+            if (dist && AREAS[city] && AREAS[city][dist]) {
+                AREAS[city][dist].subs.forEach(s => {
+                    subEl.innerHTML += `<option value="${s}">${s}</option>`;
+                });
+            }
+        }
+
+        cityEl.addEventListener('change', populateDistricts);
+        distEl.addEventListener('change', populateSubs);
+        populateDistricts();
+    }
+
+    /* ========== CHIPS ========== */
+    function initChips() {
+        $$('.chip-group').forEach(group => {
+            group.querySelectorAll('.chip').forEach(chip => {
+                chip.addEventListener('click', () => chip.classList.toggle('active'));
+            });
+        });
+    }
+
+    /* ========== TOGGLES ========== */
+    function initToggles() {
+        $$('.toggle-group').forEach(group => {
+            group.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    // chart updates
+                    if (group.id === 'toggleTrend') updateTrendChart();
+                    if (group.id === 'toggleAge') updateAgeChart();
+                });
+            });
+        });
+    }
+
+    /* ========== COLLAPSIBLE ========== */
+    function initCollapsible() {
+        $('#triggerSuggest').addEventListener('click', () => {
+            const t = $('#triggerSuggest');
+            const c = $('#contentSuggest');
+            t.classList.toggle('open');
+            c.classList.toggle('open');
+        });
+    }
+
+    /* ========== SUGGEST ========== */
+    function initSuggest() {
+        $('#btnCalcSuggest').addEventListener('click', () => {
+            const family = FAMILY_SUGGEST[$('#selFamily').value];
+            const houseType = $('#selSuggestType').value;
+            const age = $('#selSuggestAge').value;
+            const ratio = COMMON_RATIO[houseType]?.[age] || 0.30;
+
+            const bMin = Math.round(family.minPing / (1 - ratio));
+            const bMax = Math.round(family.maxPing / (1 - ratio));
+
+            const result = $('#suggestResult');
+            result.style.display = 'block';
+            result.innerHTML = `
+                <strong>${family.label}</strong> — 建議格局：${family.layout}<br>
+                <br>
+                建議室內坪數：<strong>${family.minPing} - ${family.maxPing} 坪</strong><br>
+                空間拆解：${family.detail}<br>
+                <br>
+                房型：<strong>${houseType}</strong>｜屋齡區間：<strong>${age}</strong>｜公設比：<strong>${(ratio * 100).toFixed(0)}%</strong><br>
+                <br>
+                <span class="formula">建坪 = 室內坪 &divide; (1 - 公設比)</span><br>
+                <span class="formula">${bMin} = ${family.minPing} &divide; ${(1 - ratio).toFixed(2)}</span><br>
+                <br>
+                建議權狀建坪：<strong style="color:var(--accent);font-size:1.1rem">${bMin} - ${bMax} 坪</strong>
+            `;
+
+            // Auto-fill search
+            $('#pingMin').value = bMin;
+            $('#pingMax').value = bMax;
+            toast('已套用建議坪數到搜尋條件', 'success');
+        });
+    }
+
+    /* ========== SEARCH ========== */
+    function initSearch() {
+        $('#btnSearch').addEventListener('click', doSearch);
+    }
+
+    function doSearch() {
+        const city = $('#selCity').value;
+        const dist = $('#selDistrict').value;
+        const sub = $('#selSubArea').value;
+        const types = [...$$('#chipHouseType .chip.active')].map(c => c.dataset.val);
+        const ages = [...$$('#chipAge .chip.active')].map(c => c.dataset.val);
+        const parking = $$('#toggleParking .toggle-btn.active')[0]?.dataset.val || '不限';
+
+        currentSearch = { city, dist, sub, types, ages, parking };
+
+        // Update map
+        updateMapView(city, dist);
+        // Update charts
+        const base = dist && AREAS[city]?.[dist] ? AREAS[city][dist].avg : 70;
+        currentSearch.trendData = generateTrendData(base);
+        currentSearch.ageData = generateAgeData(base);
+        updateTrendChart();
+        updateAgeChart();
+
+        toast(`已搜尋：${city} ${dist || '全區'} ${sub || ''}`, 'info');
+    }
+
+    /* ========== MAP ========== */
+    function initMap() {
+        map = L.map('map', { zoomControl: true }).setView([25.035, 121.52], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap',
+            maxZoom: 18
+        }).addTo(map);
+
+        // MRT stations
+        MRT_STATIONS.forEach(s => {
+            if (s.lines.length === 0) return;
+            const color = s.lines.includes('紅') ? '#e3002c' : s.lines.includes('藍') ? '#0070bd' : s.lines.includes('綠') ? '#008659' : s.lines.includes('橘') ? '#f8981d' : s.lines.includes('棕') ? '#c48c31' : '#666';
+            L.circleMarker([s.lat, s.lng], { radius: 5, color: color, fillColor: color, fillOpacity: 0.8, weight: 1 })
+                .bindTooltip(s.name, { permanent: false, direction: 'top', className: 'map-tip' })
+                .addTo(map);
+        });
+
+        // Highway interchanges
+        HIGHWAYS.forEach(h => {
+            L.circleMarker([h.lat, h.lng], { radius: 4, color: '#666', fillColor: '#666', fillOpacity: 0.6, weight: 1 })
+                .bindTooltip(h.name, { permanent: false, direction: 'top' })
+                .addTo(map);
+        });
+
+        // Business districts
+        BIZ_DISTRICTS.forEach(b => {
+            L.circleMarker([b.lat, b.lng], { radius: 6, color: '#9333ea', fillColor: '#9333ea', fillOpacity: 0.3, weight: 2 })
+                .bindTooltip(b.name, { permanent: false, direction: 'top' })
+                .addTo(map);
+        });
+    }
+
+    function updateMapView(city, dist) {
+        // Clear old district markers
+        map.eachLayer(layer => {
+            if (layer._isDistrictMarker) map.removeLayer(layer);
+        });
+
+        const districts = AREAS[city] || {};
+        if (dist && districts[dist]) {
+            const d = districts[dist];
+            map.setView(d.center, 14);
+            addDistrictMarker(dist, d);
+        } else {
+            const first = Object.values(districts)[0];
+            if (first) map.setView(first.center, city === '台北市' ? 12 : 11);
+            Object.entries(districts).forEach(([name, d]) => addDistrictMarker(name, d));
+        }
+    }
+
+    function addDistrictMarker(name, d) {
+        const color = d.avg >= 100 ? '#dc2626' : d.avg >= 60 ? '#f59e0b' : '#22c55e';
+        const opacity = d.avg >= 100 ? 0.35 : d.avg >= 60 ? 0.3 : 0.25;
+        const circle = L.circle(d.center, {
+            radius: 800,
+            color: color,
+            fillColor: color,
+            fillOpacity: opacity,
+            weight: 2
+        }).addTo(map);
+        circle._isDistrictMarker = true;
+
+        circle.bindPopup(`
+            <div style="font-family:var(--font);font-size:13px;line-height:1.6">
+                <strong style="font-size:14px">${name}</strong><br>
+                平均單價：<strong style="color:${color}">${d.avg} 萬/坪</strong><br>
+                最新成交：2026 Q1<br>
+                子區域：${d.subs.join('、')}
+            </div>
+        `);
+
+        const label = L.divIcon({
+            className: 'district-label',
+            html: `<div style="font-size:11px;font-weight:700;color:${color};text-shadow:0 0 3px #fff,0 0 3px #fff;white-space:nowrap;text-align:center">${name}<br>${d.avg}萬</div>`,
+            iconSize: [80, 30],
+            iconAnchor: [40, 15]
+        });
+        const marker = L.marker(d.center, { icon: label, interactive: false }).addTo(map);
+        marker._isDistrictMarker = true;
+    }
+
+    /* ========== CHARTS ========== */
+    function initCharts() {
+        const ctx1 = $('#chartTrend').getContext('2d');
+        trendChart = new Chart(ctx1, {
+            type: 'line',
+            data: { labels: [], datasets: [] },
+            options: chartOptions('萬/坪')
+        });
+
+        const ctx2 = $('#chartAge').getContext('2d');
+        ageChart = new Chart(ctx2, {
+            type: 'bar',
+            data: { labels: [], datasets: [] },
+            options: chartOptions('萬/坪')
+        });
+    }
+
+    function chartOptions(unit) {
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { display: true, position: 'top', labels: { font: { size: 12, family: 'Inter' }, usePointStyle: true, pointStyle: 'circle' } },
+                tooltip: {
+                    backgroundColor: 'rgba(15,23,42,.9)',
+                    titleFont: { size: 12, family: 'Inter' },
+                    bodyFont: { size: 11, family: 'Inter' },
+                    callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y} ${unit}` }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 10, family: 'Inter' }, color: '#94a3b8' } },
+                y: { grid: { color: 'rgba(148,163,184,.15)' }, ticks: { font: { size: 10, family: 'Inter' }, color: '#94a3b8', callback: v => v + ' ' + unit } }
+            }
+        };
+    }
+
+    function updateTrendChart() {
+        if (!currentSearch.trendData) return;
+        const mode = $$('#toggleTrend .toggle-btn.active')[0]?.dataset.val || 'unit';
+        const data = currentSearch.trendData;
+        const dist = currentSearch.dist || '全區';
+
+        trendChart.data.labels = data.map(d => d.label);
+        trendChart.data.datasets = [{
+            label: `${dist} 平均${mode === 'unit' ? '單價(萬/坪)' : '總價(萬)'}`,
+            data: data.map(d => mode === 'unit' ? d.unit : d.total),
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37,99,235,.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 3,
+            pointHoverRadius: 6
+        }];
+        trendChart.options.scales.y.ticks.callback = v => v + (mode === 'unit' ? ' 萬/坪' : ' 萬');
+        trendChart.update();
+    }
+
+    function updateAgeChart() {
+        if (!currentSearch.ageData) return;
+        const mode = $$('#toggleAge .toggle-btn.active')[0]?.dataset.val || 'unit';
+        const ageData = currentSearch.ageData;
+
+        const labels = Object.keys(ageData);
+        const values = labels.map(l => mode === 'unit' ? ageData[l].unit : ageData[l].total);
+        const colors = ['#6366f1','#2563eb','#0ea5e9','#059669','#d97706','#ea580c','#dc2626'];
+
+        ageChart.data.labels = labels;
+        ageChart.data.datasets = [{
+            label: `近3個月平均${mode === 'unit' ? '單價(萬/坪)' : '總價(萬)'}`,
+            data: values,
+            backgroundColor: colors.map(c => c + '33'),
+            borderColor: colors,
+            borderWidth: 1.5,
+            borderRadius: 6
+        }];
+        ageChart.options.scales.y.ticks.callback = v => v + (mode === 'unit' ? ' 萬/坪' : ' 萬');
+        ageChart.update();
+    }
+
+    /* ========== TOAST ========== */
+    function toast(msg, type = 'success') {
+        const el = document.createElement('div');
+        el.className = `toast ${type}`;
+        el.textContent = msg;
+        $('#toastContainer').appendChild(el);
+        setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 2500);
+    }
+
+})();

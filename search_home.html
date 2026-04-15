@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomeScope — 雙北房價分析</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="search_home.css">
+</head>
+<body>
+    <!-- NAV -->
+    <nav class="navbar" id="navbar">
+        <a href="search_home.html" class="nav-brand">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span class="brand-text">HomeScope</span>
+        </a>
+        <div class="nav-center">
+            <a href="#searchSection" class="nav-tab active" data-nav="search">搜尋條件</a>
+            <a href="#mapSection" class="nav-tab" data-nav="map">地圖總覽</a>
+            <a href="#chartSection" class="nav-tab" data-nav="chart">趨勢圖表</a>
+        </div>
+        <div class="nav-actions">
+            <a href="search_home_tools.html" class="nav-btn">
+                <svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>
+                分析工具
+            </a>
+            <button class="nav-btn" id="btnTheme">
+                <svg viewBox="0 0 24 24" id="themeIcon"><path d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>
+                <span id="themeLabel">深色</span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="page-body">
+        <!-- DATA NOTICE -->
+        <div class="data-notice">
+            <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+            資料來源：內政部實價登錄。資料每季更新，目前顯示至 <strong id="dataDate">2026 Q1</strong>，實際成交與揭露約有 1-2 個月延遲。
+        </div>
+
+        <!-- SEARCH SECTION -->
+        <section class="section" id="searchSection">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                搜尋條件
+            </h2>
+            <div class="card">
+                <div class="form-grid form-grid-3" style="margin-bottom:14px">
+                    <div class="form-group">
+                        <label class="form-label">縣市</label>
+                        <select class="input" id="selCity">
+                            <option value="台北市">台北市</option>
+                            <option value="新北市">新北市</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">行政區</label>
+                        <select class="input" id="selDistrict"><option value="">-- 請選擇 --</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">細分區域</label>
+                        <select class="input" id="selSubArea"><option value="">-- 全部 --</option></select>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:14px">
+                    <label class="form-label">房型</label>
+                    <div class="chip-group" id="chipHouseType">
+                        <button class="chip active" data-val="大樓">大樓</button>
+                        <button class="chip" data-val="華廈">華廈</button>
+                        <button class="chip" data-val="公寓">公寓</button>
+                        <button class="chip" data-val="套房">套房</button>
+                        <button class="chip" data-val="透天">透天</button>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:14px">
+                    <label class="form-label">屋齡分類</label>
+                    <div class="chip-group" id="chipAge">
+                        <button class="chip active" data-val="預售屋">預售屋</button>
+                        <button class="chip active" data-val="新成屋">新成屋 (0-5年)</button>
+                        <button class="chip" data-val="中古6-10">中古 6-10年</button>
+                        <button class="chip" data-val="中古11-20">中古 11-20年</button>
+                        <button class="chip" data-val="中古21-30">中古 21-30年</button>
+                        <button class="chip" data-val="中古31-40">中古 31-40年</button>
+                        <button class="chip" data-val="中古40+">中古 40年以上</button>
+                    </div>
+                </div>
+
+                <div class="form-grid form-grid-2" style="margin-bottom:14px">
+                    <div class="form-group">
+                        <label class="form-label">有無車位</label>
+                        <div class="toggle-group" id="toggleParking">
+                            <button class="toggle-btn active" data-val="不限">不限</button>
+                            <button class="toggle-btn" data-val="有">有</button>
+                            <button class="toggle-btn" data-val="無">無</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">建坪範圍（坪）</label>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <input type="number" class="input" id="pingMin" value="10" min="0" max="200" style="width:80px">
+                            <span style="color:var(--text-muted)">—</span>
+                            <input type="number" class="input" id="pingMax" value="80" min="0" max="200" style="width:80px">
+                            <span style="font-size:.82rem;color:var(--text-dim)">坪</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collapsible: Suggest -->
+                <button class="collapsible-trigger" id="triggerSuggest">
+                    <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                    坪數建議試算 — 依家庭組成推算適合坪數
+                </button>
+                <div class="collapsible-content" id="contentSuggest">
+                    <div class="form-grid form-grid-3" style="margin-bottom:14px">
+                        <div class="form-group">
+                            <label class="form-label">家庭組成</label>
+                            <select class="input" id="selFamily">
+                                <option value="single">單身 (1人)</option>
+                                <option value="couple">情侶/夫妻 (2人)</option>
+                                <option value="small" selected>小家庭 — 1孩 (3人)</option>
+                                <option value="standard">標準家庭 — 2孩 (4人)</option>
+                                <option value="extended">三代同堂 (5-6人)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">房型（用於公設比）</label>
+                            <select class="input" id="selSuggestType">
+                                <option value="公寓">公寓</option>
+                                <option value="華廈">華廈</option>
+                                <option value="大樓" selected>大樓</option>
+                                <option value="預售屋">預售屋</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">屋齡（用於公設比）</label>
+                            <select class="input" id="selSuggestAge">
+                                <option value="10以內" selected>10年以內</option>
+                                <option value="10-20">10-20年</option>
+                                <option value="20以上">20年以上</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm" id="btnCalcSuggest">套用建議坪數</button>
+
+                    <!-- Result -->
+                    <div class="calc-box" id="suggestResult" style="display:none"></div>
+
+                    <!-- Reference table -->
+                    <details style="margin-top:16px">
+                        <summary style="font-size:.85rem;font-weight:600;color:var(--text-dim);cursor:pointer;margin-bottom:8px">建議坪數參考依據與思考邏輯</summary>
+                        <div style="font-size:.82rem;color:var(--text-dim);line-height:1.8;margin-bottom:12px">
+                            <p><strong>資料來源：</strong>內政部營建署住宅設計規範、賣厝阿明知識+（網友實際經驗與室內設計師建議彙整）、市場慣例。</p>
+                            <p style="margin-top:8px"><strong>思考邏輯：</strong></p>
+                            <ol style="padding-left:18px;margin-top:4px">
+                                <li><strong>最低標準</strong>：內政部營建署建議每人最低居住面積為 3.96 坪（13.07 m²），但此為「最低標準」，實際舒適居住建議每人 7-10 坪。</li>
+                                <li><strong>空間拆解法</strong>：將住宅拆分為客廳、餐廳、廚房、臥室、衛浴、走道/陽台等獨立空間，依人數需求加總。一般客廳需 4-6 坪、主臥 4-5 坪、次臥 3-4 坪、衛浴 1-1.5 坪。</li>
+                                <li><strong>生活品質考量</strong>：參考賣厝阿明整理的真實經驗——兩人同住至少 18 坪才不會感到壓迫；有小孩需額外考量遊戲空間與收納；三代同堂需注意隱私動線分離。</li>
+                                <li><strong>從室內坪推建坪</strong>：權狀建坪 = 室內坪 ÷ (1 - 公設比)。公設比因房型與屋齡差異極大（公寓約 10%、新大樓約 33-35%），直接影響你需購入的坪數。</li>
+                            </ol>
+                        </div>
+                        <table class="suggest-table">
+                            <thead>
+                                <tr><th>家庭組成</th><th>人數</th><th>建議格局</th><th>建議室內坪</th><th>空間拆解</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>單身</td><td>1人</td><td>1房1廳1衛</td><td class="highlight">12-18 坪</td><td>客廳4 + 臥4 + 衛1 + 廚2 + 走道1</td></tr>
+                                <tr><td>情侶/夫妻</td><td>2人</td><td>2房1廳1衛</td><td class="highlight">18-24 坪</td><td>客廳5 + 主臥4 + 書房3 + 衛1.5 + 廚2.5 + 走道2</td></tr>
+                                <tr><td>小家庭(1孩)</td><td>3人</td><td>2-3房2廳2衛</td><td class="highlight">24-30 坪</td><td>客餐7 + 主臥5 + 次臥3 + 衛×2=3 + 廚3 + 走道3</td></tr>
+                                <tr><td>標準家庭(2孩)</td><td>4人</td><td>3房2廳2衛</td><td class="highlight">30-38 坪</td><td>客餐8 + 主臥5 + 次臥×2=7 + 衛3 + 廚3 + 走道4</td></tr>
+                                <tr><td>三代同堂</td><td>5-6人</td><td>4房2廳2衛</td><td class="highlight">38-50 坪</td><td>客餐9 + 主臥5 + 次臥×3=11 + 衛3 + 廚3 + 走道5 + 儲2</td></tr>
+                            </tbody>
+                        </table>
+                        <table class="suggest-table" style="margin-top:16px">
+                            <thead>
+                                <tr><th>房型</th><th>屋齡</th><th>公設比</th><th>說明</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>公寓</td><td>不限</td><td class="highlight">10%</td><td>僅樓梯間，幾乎無公設</td></tr>
+                                <tr><td>華廈</td><td>20年以上</td><td class="highlight">18%</td><td>早期法規公設少</td></tr>
+                                <tr><td>華廈</td><td>10-20年</td><td class="highlight">22%</td><td></td></tr>
+                                <tr><td>華廈</td><td>10年以內</td><td class="highlight">25%</td><td></td></tr>
+                                <tr><td>大樓</td><td>20年以上</td><td class="highlight">25%</td><td>早期大樓公設較低</td></tr>
+                                <tr><td>大樓</td><td>10-20年</td><td class="highlight">30%</td><td>2005後雨遮計坪、公設增</td></tr>
+                                <tr><td>大樓</td><td>10年以內</td><td class="highlight">33%</td><td>近年新建案公設比偏高</td></tr>
+                                <tr><td>預售屋</td><td>—</td><td class="highlight">35%</td><td>含車道、機電空間等</td></tr>
+                            </tbody>
+                        </table>
+                    </details>
+                </div>
+
+                <div style="margin-top:16px">
+                    <button class="btn btn-primary" id="btnSearch">
+                        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                        搜尋房價
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- MAP SECTION -->
+        <section class="section" id="mapSection">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                區域房價地圖
+            </h2>
+            <div class="card">
+                <div class="map-container" id="map"></div>
+                <div class="map-legend">
+                    <div class="legend-item"><div class="legend-dot legend-high"></div>高價位 (>100萬/坪)</div>
+                    <div class="legend-item"><div class="legend-dot legend-mid"></div>中價位 (50-100萬/坪)</div>
+                    <div class="legend-item"><div class="legend-dot legend-low"></div>低價位 (<50萬/坪)</div>
+                    <div class="legend-item"><div class="legend-dot legend-mrt"></div>捷運站</div>
+                    <div class="legend-item"><div class="legend-dot legend-highway"></div>交流道</div>
+                    <div class="legend-item"><div class="legend-dot legend-biz"></div>商圈</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CHART SECTION -->
+        <section class="section" id="chartSection">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+                房價趨勢分析
+            </h2>
+
+            <!-- Chart 1: 5-year trend -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">近五年季度房價趨勢</h3>
+                    <div class="toggle-group" id="toggleTrend" style="width:180px">
+                        <button class="toggle-btn active" data-val="unit">單價</button>
+                        <button class="toggle-btn" data-val="total">總價</button>
+                    </div>
+                </div>
+                <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:12px">單價已扣除車位坪數與價格</p>
+                <div class="chart-container"><canvas id="chartTrend"></canvas></div>
+            </div>
+
+            <!-- Chart 2: Age comparison -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">近三個月 — 依屋齡分類均價比較</h3>
+                    <div class="toggle-group" id="toggleAge" style="width:180px">
+                        <button class="toggle-btn active" data-val="unit">單價</button>
+                        <button class="toggle-btn" data-val="total">總價</button>
+                    </div>
+                </div>
+                <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:12px">同區域同房型，單價已扣除車位</p>
+                <div class="chart-container"><canvas id="chartAge"></canvas></div>
+            </div>
+        </section>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <footer class="footer">
+        <p>HomeScope &copy; 2026 — 資料來源：內政部實價登錄開放資料。本站分析僅供參考，不構成投資建議。</p>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="search_home.js"></script>
+</body>
+</html>
